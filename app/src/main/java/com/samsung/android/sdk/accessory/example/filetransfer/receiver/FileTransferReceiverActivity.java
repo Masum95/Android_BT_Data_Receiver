@@ -20,10 +20,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
-
-import java.io.File;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -32,17 +29,26 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.*;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
-public class FileTransferReceiverActivity extends Activity {
+import java.io.File;
+
+public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> extends Activity {
     private static final String TAG = "FileTransferReceiverActivity";
     private static boolean mIsUp = false;
     private static final String DEST_DIRECTORY = Environment.getExternalStorageDirectory().getAbsolutePath(); // better is Environment.getExternalStorageDirectory()
@@ -53,6 +59,20 @@ public class FileTransferReceiverActivity extends Activity {
     private AlertDialog mAlert;
     private ProgressBar mRecvProgressBar;
     private FileTransferReceiver mReceiverService;
+    DatabaseHelper myDb;
+
+    private ListView listview;
+    private Button Addbutton;
+    private Button reloadBtn;
+
+    private EditText GetValue;
+
+    java.util.ArrayList<String> listItems;
+
+    ArrayAdapter<String> adapter;
+
+
+
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceDisconnected(ComponentName name) {
@@ -71,10 +91,92 @@ public class FileTransferReceiverActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_receiver_activity);
+        myDb = new DatabaseHelper(this);
+
+
+        listview = (ListView) findViewById(R.id.list);
+
+        Cursor res = myDb.getLastN_Data(5);
+
+        listItems = new java.util.ArrayList<String>();;
+        listItems.add("List of received files");
+        while (res.moveToNext()) {
+            String id = res.getString( res.getColumnIndex("id") ); // id is column name in db
+            String name = res.getString(res.getColumnIndex("name"));
+//            Log.d(TAG, name);
+
+            listItems.add("file :" +  name );
+
+        }
+
+
+        adapter=new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1,
+                listItems);
+        listview.setAdapter(adapter);
+
+        Addbutton = (Button) findViewById(R.id.btAddDb);
+        reloadBtn = (Button) findViewById(R.id.btReload);
+
+//        GetValue = (EditText)findViewById(R.id.txtInput);
+//
+//        List<String> ListElementsArrayList = new java.util.ArrayList<String>(Arrays.asList(ListElements));
+//
+
+//        ArrayAdapter<String> adapter = new ArrayAdapter<String>
+//                (this,R.layout.list_layout,R.id.txtview,ListElementsArrayList);
+//
+//        listview.setAdapter(adapter);
+
+
+
+
         mIsUp = true;
         mCtxt = getApplicationContext();
         mRecvProgressBar = (ProgressBar) findViewById(R.id.RecvProgress);
         mRecvProgressBar.setMax(100);
+
+
+        Addbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                boolean isInserted = myDb.insertData("filename",
+                        "smartwatch",
+                        1,
+                        0);
+                if(isInserted == true)
+                    Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+
+            }
+        });
+
+        reloadBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Cursor res = myDb.getLastN_Data(5);
+
+                listItems.clear();
+                listItems.add("List of received files");
+
+
+                while (res.moveToNext()) {
+                    String id = res.getString( res.getColumnIndex("id") ); // id is column name in db
+                    String name = res.getString(res.getColumnIndex("name"));
+
+                    listItems.add("file :" +  name );
+
+                }
+
+                adapter.notifyDataSetChanged();
+
+
+            }
+        });
+
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             Toast.makeText(mCtxt, " No SDCARD Present", Toast.LENGTH_SHORT).show();
             finish();
@@ -151,7 +253,10 @@ public class FileTransferReceiverActivity extends Activity {
                             mAlert.dismiss();
                         }
                         Toast.makeText(mCtxt, "Transfer cancelled " + "Error", Toast.LENGTH_SHORT).show();
+
                         mRecvProgressBar.setProgress(0);
+
+
                     }
                 });
             }
@@ -167,7 +272,7 @@ public class FileTransferReceiverActivity extends Activity {
             }
 
             @Override
-            public void onFileActionTransferComplete() {
+            public void onFileActionTransferComplete(final String fileName) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -176,6 +281,18 @@ public class FileTransferReceiverActivity extends Activity {
                             mAlert.dismiss();
                         }
                         Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
+
+                        boolean isInserted = myDb.insertData(fileName,
+                                "sw",
+                                0,
+                                0);
+                        if(isInserted == true)
+                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
+                        else
+                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+
+//                        listItems.add("Recvd : "+fileName);
+//                        adapter.notifyDataSetChanged();
                     }
                 });
             }

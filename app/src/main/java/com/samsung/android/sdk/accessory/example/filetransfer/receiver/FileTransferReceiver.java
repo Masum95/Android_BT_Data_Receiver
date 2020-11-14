@@ -74,7 +74,7 @@ public class FileTransferReceiver extends SAAgent {
                 Log.d(TAG, "onTransferCompleted: tr id : " + transId + " file name : " + fileName + " error : "
                             + errorCode);
                 if (errorCode == SAFileTransfer.ERROR_NONE) {
-                    mFileAction.onFileActionTransferComplete();
+                    mFileAction.onFileActionTransferComplete(fileName);
                 } else {
                     mFileAction.onFileActionError();
                 }
@@ -226,7 +226,7 @@ public class FileTransferReceiver extends SAAgent {
 
         void onFileActionProgress(long progress);
 
-        void onFileActionTransferComplete();
+        void onFileActionTransferComplete(String fileName);
 
         void onFileActionTransferRequested(int id, String path);
     }
