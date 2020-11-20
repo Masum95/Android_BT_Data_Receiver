@@ -402,9 +402,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (mAlert != null && mAlert.isShowing()) {
-                            mAlert.dismiss();
-                        }
+//                        if (mAlert != null && mAlert.isShowing()) {
+//                            mAlert.dismiss();
+//                        }
                         Toast.makeText(mCtxt, "Transfer cancelled " + "Error", Toast.LENGTH_SHORT).show();
 
                         mRecvProgressBar.setProgress(0);
@@ -430,9 +430,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                     @Override
                     public void run() {
                         mRecvProgressBar.setProgress(0);
-                        if (mAlert != null) {
-                            mAlert.dismiss();
-                        }
+//                        if (mAlert != null) {
+//                            mAlert.dismiss();
+//                        }
                         Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
 
                         boolean isInserted = myDb.insertData(fileName,
@@ -454,72 +454,73 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
             public void onFileActionTransferRequested(int id, String path) {
                 mFilePath = path;
                 mTransId = id;
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        AlertDialog.Builder alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
-                        alertbox.setMessage("Do you want to receive file: " + mFilePath + " ?");
-                        alertbox.setPositiveButton("Accept",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface arg0, int arg1) {
-                                            mAlert.dismiss();
+//                        AlertDialog.Builder alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
+//                        alertbox.setMessage("Do you want to receive file: " + mFilePath + " ?");
+//                        alertbox.setPositiveButton("Accept",
+//                                    new DialogInterface.OnClickListener() {
+//                                        public void onClick(DialogInterface arg0, int arg1) {
+////                                            mAlert.dismiss();
                                             try {
                                                 String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"), mFilePath.length());
                                                 mReceiverService.receiveFile(mTransId, DEST_DIRECTORY
                                                             + receiveFileName, true);
-                                                Log.i(TAG, "Transfer accepted");
-                                                showQuitDialog();
+//                                                Log.i(TAG, "Transfer accepted");
+//                                                showQuitDialog();
                                             } catch (Exception e) {
                                                 e.printStackTrace();
                                                 Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
                                             }
-                                        }
-                                    });
-                        alertbox.setNegativeButton("Reject",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface arg0, int arg1) {
-                                            mAlert.dismiss();
-                                            try {
-                                                mReceiverService.receiveFile(mTransId, DEST_DIRECTORY, false);
-                                                Log.i(TAG, "Transfer rejected");
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                                Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-                                    });
-                        alertbox.setCancelable(false);
-                        mAlert = alertbox.create();
-                        mAlert.show();
+//                                        }
+//                                    });
+//                        alertbox.setNegativeButton("Reject",
+//                                    new DialogInterface.OnClickListener() {
+//                                        public void onClick(DialogInterface arg0, int arg1) {
+////                                            mAlert.dismiss();
+//                                            try {
+//                                                mReceiverService.receiveFile(mTransId, DEST_DIRECTORY, false);
+//                                                Log.i(TAG, "Transfer rejected");
+//                                            } catch (Exception e) {
+//                                                e.printStackTrace();
+//                                                Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
+//                                            }
+//                                        }
+//                                    });
+//                        alertbox.setCancelable(false);
+//                        mAlert = alertbox.create();
+//                        mAlert.show();
                     }
                 });
             }
         };
     }
 
-    private void showQuitDialog() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlertDialog.Builder alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
-                alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
-                alertbox.setMessage("Receiving file : [" + mFilePath + "] QUIT?");
-                alertbox.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface arg0, int arg1) {
-                        try {
-                            mReceiverService.cancelFileTransfer(mTransId);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
-                        }
-                        mAlert.dismiss();
-                        mRecvProgressBar.setProgress(0);
-                    }
-                });
-                alertbox.setCancelable(false);
-                mAlert = alertbox.create();
-                mAlert.show();
-            }
-        });
-    }
-}
+//    private void showQuitDialog() {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+////                AlertDialog.Builder alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
+////                alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
+////                alertbox.setMessage("Receiving file : [" + mFilePath + "] QUIT?");
+////                alertbox.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+////                    public void onClick(DialogInterface arg0, int arg1) {
+////                        try {
+////                            mReceiverService.cancelFileTransfer(mTransId);
+////                        } catch (Exception e) {
+////                            e.printStackTrace();
+////                            Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
+////                        }
+//////                        mAlert.dismiss();
+////                        mRecvProgressBar.setProgress(0);
+////                    }
+////                });
+////                alertbox.setCancelable(false);
+////                mAlert = alertbox.create();
+////                mAlert.show();
+//            }
+//        });
+//    }
+//}
