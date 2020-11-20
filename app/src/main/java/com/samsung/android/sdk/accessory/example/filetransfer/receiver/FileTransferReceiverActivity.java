@@ -23,16 +23,22 @@
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -42,13 +48,17 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import android.support.v7.widget.Toolbar;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
 import java.io.File;
+import java.util.Iterator;
+import java.util.List;
 
-public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> extends Activity {
+
+public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
     private static boolean mIsUp = false;
     private static final String DEST_DIRECTORY = Environment.getExternalStorageDirectory().getAbsolutePath(); // better is Environment.getExternalStorageDirectory()
@@ -64,12 +74,27 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     private ListView listview;
     private Button Addbutton;
     private Button reloadBtn;
+    //button objects
+    private Button buttonStart;
+    private Button buttonStop;
+
 
     private EditText GetValue;
 
     java.util.ArrayList<String> listItems;
 
     ArrayAdapter<String> adapter;
+
+
+
+    int cameraRequestCode = 001;
+    Classifier classifier;
+
+
+    Intent mServiceIntent;
+    private FileTransferReceiver mYourService;
+    public static String PACKAGE_NAME;
+
 
 
 
@@ -85,6 +110,8 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             Log.d(TAG, "Service connected");
             mReceiverService = ((ReceiverBinder) binder).getService();
             mReceiverService.registerFileAction(getFileAction());
+            mServiceIntent = new Intent(FileTransferReceiverActivity.this, mReceiverService.getClass());
+
         }
     };
 
@@ -92,6 +119,50 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_receiver_activity);
         myDb = new DatabaseHelper(this);
+
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+
+        classifier = new Classifier(Utils.assetFilePath(this,"mobilenet-v2.pt"));
+
+        Button capture = findViewById(R.id.capture);
+
+        capture.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view){
+
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+                startActivityForResult(cameraIntent,cameraRequestCode);
+
+            }
+
+
+        });
+
+
+//        mYourService = new FileTransferReceiver();
+//        mReceiverService = new FileTransferReceiver();
+//        mServiceIntent = new Intent(FileTransferReceiverActivity.this, mReceiverService.getClass());
+//        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+//        if (!isMyServiceRunning(mYourService.getClass())) {
+//            startService(mServiceIntent);
+//        }
+
+//        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService( Context.ACTIVITY_SERVICE );
+//        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+//        for(ActivityManager.RunningAppProcessInfo appProcess : appProcesses){
+////            if(appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
+//            {
+//                Log.d("Foreground", appProcess.processName);
+//            }
+//        }
+
+
+        PACKAGE_NAME = getApplicationContext().getPackageName();
 
 
         listview = (ListView) findViewById(R.id.list);
@@ -110,6 +181,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         }
 
 
+
         adapter=new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1,
                 listItems);
@@ -117,17 +189,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
         Addbutton = (Button) findViewById(R.id.btAddDb);
         reloadBtn = (Button) findViewById(R.id.btReload);
-
-//        GetValue = (EditText)findViewById(R.id.txtInput);
-//
-//        List<String> ListElementsArrayList = new java.util.ArrayList<String>(Arrays.asList(ListElements));
-//
-
-//        ArrayAdapter<String> adapter = new ArrayAdapter<String>
-//                (this,R.layout.list_layout,R.id.txtview,ListElementsArrayList);
-//
-//        listview.setAdapter(adapter);
-
+        //getting buttons from xml
+        buttonStart = (Button) findViewById(R.id.buttonStart);
+        buttonStop = (Button) findViewById(R.id.buttonStop);
 
 
 
@@ -156,6 +220,25 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         reloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+//                List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(50);
+//                Iterator<ActivityManager.RunningServiceInfo> i = l.iterator();
+//                while (i.hasNext()) {
+//                    ActivityManager.RunningServiceInfo runningServiceInfo = i
+//                            .next();
+//
+//                    Log.d("here", String.valueOf(runningServiceInfo.service.getClassName()));
+//                    Log.d("here", String.valueOf(runningServiceInfo.pid));
+//
+//                    if(runningServiceInfo.service.getClassName().equals("com.samsung.android.sdk.accessory.example.filetransfer.receiver.RecvrService")){
+//
+//                                                         android.os.Process.killProcess(runningServiceInfo.pid);
+//
+//
+//                        }
+//                    }
+//                }
+
 
                 Cursor res = myDb.getLastN_Data(5);
 
@@ -177,6 +260,33 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             }
         });
 
+        buttonStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+                if (!isMyServiceRunning(mReceiverService.getClass())) {
+                    startService(mServiceIntent);
+                }
+
+            }
+        });
+
+        buttonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("tag", "hello from  ");
+
+                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
+                if (isMyServiceRunning(mReceiverService.getClass())) {
+
+                    startService(mServiceIntent);
+
+                }
+
+
+            }
+        });
+
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             Toast.makeText(mCtxt, " No SDCARD Present", Toast.LENGTH_SHORT).show();
             finish();
@@ -190,6 +300,42 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
                     this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+
+        if(requestCode == cameraRequestCode && resultCode == RESULT_OK){
+
+            Intent resultView = new Intent(this,Result.class);
+
+            resultView.putExtra("imagedata",data.getExtras());
+
+            Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
+
+            String pred = classifier.predict(imageBitmap);
+            resultView.putExtra("pred",pred);
+
+            startActivity(resultView);
+
+        }
+
+    }
+
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            Log.d("list----", String.valueOf(service.service));
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("Service status", "Running");
+                return true;
+            }
+        }
+        Log.i ("Service status", "Not running");
+        return false;
+    }
+
+
 
     @Override
     protected void onStart() {
@@ -216,8 +362,15 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     }
 
     public void onDestroy() {
+        mServiceIntent = new Intent();
+        mServiceIntent.setAction("restartservice");
+        mServiceIntent.setClass(this, Restarter.class);
+        this.sendBroadcast(mServiceIntent);
+        Log.d("why ", "man");
+
         mIsUp = false;
         super.onDestroy();
+
     }
 
     @Override

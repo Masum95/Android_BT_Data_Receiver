@@ -4,5 +4,6 @@
     <string name="app_name">FileTransferReceiver</string>
     <string name="recv_status">Recv Status</string>
     <string name="recv_progress">Recv Progress</string>
-
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_result">Result</string>
 </resources>
