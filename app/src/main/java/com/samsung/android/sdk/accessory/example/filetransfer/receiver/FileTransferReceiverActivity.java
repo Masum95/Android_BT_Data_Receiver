@@ -118,6 +118,8 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
 
     final static String pkgFolderName = "BayesBeat/";
     final static String csvFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName +  "csvFiles/";
+    final static String modelFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName +  "model/";
+
     private static final String DEST_DIRECTORY = csvFileDir;
 
 
@@ -246,27 +248,32 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         mCtxt = getApplicationContext();
         mRecvProgressBar = (ProgressBar) findViewById(R.id.RecvProgress);
         mRecvProgressBar.setMax(100);
-        File folder = new File(csvFileDir);
+
+
+        File csvFolder = new File(csvFileDir);
+        File modelFolder = new File(modelFileDir);
+
         boolean success = true;
-        if (!folder.exists()) {
-            success = folder.mkdirs();
+        if (!csvFolder.exists()) {
+            success = csvFolder.mkdirs();
         }
-        if (success) {
-            // Do something on success
-        } else {
-            // Do something else on failure
+        if (!modelFolder.exists()) {
+            success = modelFolder.mkdirs();
         }
-        DownloadManager downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse("https://filesamples.com/samples/document/doc/sample1.doc");
+        new StarterTask().execute("my string parameter");
 
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        request.setTitle("My File");
-        request.setDescription("Downloading");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setVisibleInDownloadsUi(false);
-        request.setDestinationUri(Uri.parse("file://" + folder + "/sample1.doc"));
 
-        downloadmanager.enqueue(request);
+//        DownloadManager downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+//        Uri uri = Uri.parse("https://filesamples.com/samples/document/doc/sample1.doc");
+//
+//        DownloadManager.Request request = new DownloadManager.Request(uri);
+//        request.setTitle("My File");
+//        request.setDescription("Downloading");
+//        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+//        request.setVisibleInDownloadsUi(false);
+//        request.setDestinationUri(Uri.parse("file://" + folder + "/sample1.doc"));
+//
+//        downloadmanager.enqueue(request);
 
 
 
@@ -346,6 +353,37 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                     this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    private class StarterTask extends AsyncTask<String, Integer, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String modelName = "bayesbeat_cpu.pt";
+            AssetManager am = getAssets();
+            InputStream inputStream = null;
+            try {
+                inputStream = am.open(modelName);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try{
+                File f = new File(modelFileDir + modelName);
+                OutputStream outputStream = new FileOutputStream(f);
+                byte buffer[] = new byte[1024];
+                int length = 0;
+
+                while((length=inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer,0,length);
+                }
+
+                outputStream.close();
+                inputStream.close();
+            }catch (IOException e) {
+                //Logging exception
+            }
+
+            return "model copied";
+        }
+    }
+
     private class ModelRunner extends AsyncTask<String, Integer, String> {
 
         // Runs in UI before background thread is called
@@ -369,7 +407,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
             }
 //            File file = createFileFromInputStream(inputStream);
             try{
-                File f = new File(csvFileDir + modelName);
+                File f = new File(modelFileDir + modelName);
                 OutputStream outputStream = new FileOutputStream(f);
                 byte buffer[] = new byte[1024];
                 int length = 0;
@@ -386,10 +424,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");
 //            PyObject obj = pyObject.callAttr("add", csvFileDir + "/myfile.csv");
-            String modelPath = csvFileDir;
-            PyObject obj = pyObject.callAttr("input_preprocessing", modelPath, csvFileDir );
+            PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir, csvFileDir );
 
-            Log.d("tag", "hello from python "+obj.toString());
+            Log.d("tag", "Result from python "+obj.toString());
             return obj.toString();
         }
 
@@ -405,11 +442,12 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            Toast.makeText(mCtxt, "python result"+result, Toast.LENGTH_LONG).show();
+            Toast.makeText(mCtxt, "python result "+result, Toast.LENGTH_LONG).show();
 
             // Do things like hide the progress bar or change a TextView
         }
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
 
