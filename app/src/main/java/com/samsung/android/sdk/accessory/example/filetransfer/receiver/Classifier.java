@@ -14,7 +14,7 @@ public class Classifier {
     float[] std = {0.229f, 0.224f, 0.225f};
 
     public Classifier(String modelPath){
-
+//        model = Module.load("bayesbeat_cpu.pt");
         model = Module.load(modelPath);
 
     }

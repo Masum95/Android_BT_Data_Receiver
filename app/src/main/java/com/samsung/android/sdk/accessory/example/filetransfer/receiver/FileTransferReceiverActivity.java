@@ -32,6 +32,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -53,10 +54,20 @@ import android.support.v7.widget.Toolbar;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.opencsv.CSVReader;
+import java.io.IOException;
+import java.io.FileReader;
 
 public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
@@ -124,42 +135,62 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        String csvfileString = this.getApplicationInfo().dataDir + File.separatorChar +  "myfile.csv";
+        File csvfile = new File(csvfileString);
+        AssetManager assetManager = getApplicationContext().getAssets();
 
-        classifier = new Classifier(Utils.assetFilePath(this,"mobilenet-v2.pt"));
+        Log.d("tag", "here");
+        try {
+            InputStream csvStream = assetManager.open("myfile.csv");
 
-        Button capture = findViewById(R.id.capture);
+            String[] colsList = new String[]{"a","b","c","d","e","f","g","h","i","j","k","l","m","n"};
 
-        capture.setOnClickListener(new View.OnClickListener(){
-
-            @Override
-            public void onClick(View view){
-
-                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-                startActivityForResult(cameraIntent,cameraRequestCode);
-
-            }
-
-
-        });
+            DataFrame df = new DataFrame();
+            df.setColumnNames(colsList);
+            df.readDataFrameFrom(csvStream);
+            List<List<String>> myEntries = df.getDataFrame();// new java.util.ArrayList<List<String>>();
+            String[] line;
 
 
-//        mYourService = new FileTransferReceiver();
-//        mReceiverService = new FileTransferReceiver();
-//        mServiceIntent = new Intent(FileTransferReceiverActivity.this, mReceiverService.getClass());
-//        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
-//        if (!isMyServiceRunning(mYourService.getClass())) {
-//            startService(mServiceIntent);
-//        }
+            Log.d("tag", String.valueOf(myEntries.get(0).get(1)));
+            Log.d("tag", String.valueOf(df.getNumRow()));
+            Log.d("tag", String.valueOf(df.getNumCol()));
+            Log.d("tag", String.valueOf(df.getCol("n")));
 
-//        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService( Context.ACTIVITY_SERVICE );
-//        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
-//        for(ActivityManager.RunningAppProcessInfo appProcess : appProcesses){
-////            if(appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
-//            {
-//                Log.d("Foreground", appProcess.processName);
+            Log.d("tag", String.valueOf(df.getCol("c")));
+
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("tag", "not found");
+
+            Toast.makeText(this, "The specified file was not found", Toast.LENGTH_SHORT).show();
+        }
+
+
+
+//        classifier = new Classifier(Utils.assetFilePath(this,"mobilenet-v2.pt"));
+        classifier = new Classifier(Utils.assetFilePath(this,"bayesbeat_cpu_codeless.pt"));
+
+//        Button capture = findViewById(R.id.capture);
+//
+//        capture.setOnClickListener(new View.OnClickListener(){
+//
+//            @Override
+//            public void onClick(View view){
+//
+//                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//
+//                startActivityForResult(cameraIntent,cameraRequestCode);
+//
 //            }
-//        }
+//
+//
+//        });
+
+
+
 
 
         PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -174,7 +205,6 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         while (res.moveToNext()) {
             String id = res.getString( res.getColumnIndex("id") ); // id is column name in db
             String name = res.getString(res.getColumnIndex("name"));
-//            Log.d(TAG, name);
 
             listItems.add("file :" +  name );
 
@@ -220,31 +250,10 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         reloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-//                List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(50);
-//                Iterator<ActivityManager.RunningServiceInfo> i = l.iterator();
-//                while (i.hasNext()) {
-//                    ActivityManager.RunningServiceInfo runningServiceInfo = i
-//                            .next();
-//
-//                    Log.d("here", String.valueOf(runningServiceInfo.service.getClassName()));
-//                    Log.d("here", String.valueOf(runningServiceInfo.pid));
-//
-//                    if(runningServiceInfo.service.getClassName().equals("com.samsung.android.sdk.accessory.example.filetransfer.receiver.RecvrService")){
-//
-//                                                         android.os.Process.killProcess(runningServiceInfo.pid);
-//
-//
-//                        }
-//                    }
-//                }
-
-
                 Cursor res = myDb.getLastN_Data(5);
 
                 listItems.clear();
                 listItems.add("List of received files");
-
 
                 while (res.moveToNext()) {
                     String id = res.getString( res.getColumnIndex("id") ); // id is column name in db
@@ -255,7 +264,6 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                 }
 
                 adapter.notifyDataSetChanged();
-
 
             }
         });
@@ -439,13 +447,11 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                                 "sw",
                                 0,
                                 0);
-                        if(isInserted == true)
-                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
+                        if (isInserted == true)
+                            Toast.makeText(mCtxt, "Data Inserted", Toast.LENGTH_LONG).show();
                         else
-                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+                            Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
 
-//                        listItems.add("Recvd : "+fileName);
-//                        adapter.notifyDataSetChanged();
                     }
                 });
             }
@@ -458,69 +464,21 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        AlertDialog.Builder alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
-//                        alertbox.setMessage("Do you want to receive file: " + mFilePath + " ?");
-//                        alertbox.setPositiveButton("Accept",
-//                                    new DialogInterface.OnClickListener() {
-//                                        public void onClick(DialogInterface arg0, int arg1) {
-////                                            mAlert.dismiss();
-                                            try {
-                                                String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"), mFilePath.length());
-                                                mReceiverService.receiveFile(mTransId, DEST_DIRECTORY
-                                                            + receiveFileName, true);
-//                                                Log.i(TAG, "Transfer accepted");
-//                                                showQuitDialog();
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                                Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
-                                            }
-//                                        }
-//                                    });
-//                        alertbox.setNegativeButton("Reject",
-//                                    new DialogInterface.OnClickListener() {
-//                                        public void onClick(DialogInterface arg0, int arg1) {
-////                                            mAlert.dismiss();
-//                                            try {
-//                                                mReceiverService.receiveFile(mTransId, DEST_DIRECTORY, false);
-//                                                Log.i(TAG, "Transfer rejected");
-//                                            } catch (Exception e) {
-//                                                e.printStackTrace();
-//                                                Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
-//                                            }
-//                                        }
-//                                    });
-//                        alertbox.setCancelable(false);
-//                        mAlert = alertbox.create();
-//                        mAlert.show();
+
+                        try {
+                            String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"), mFilePath.length());
+                            mReceiverService.receiveFile(mTransId, DEST_DIRECTORY
+                                    + receiveFileName, true);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
                 });
             }
         };
-    }
 
-//    private void showQuitDialog() {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-////                AlertDialog.Builder alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
-////                alertbox = new AlertDialog.Builder(FileTransferReceiverActivity.this);
-////                alertbox.setMessage("Receiving file : [" + mFilePath + "] QUIT?");
-////                alertbox.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-////                    public void onClick(DialogInterface arg0, int arg1) {
-////                        try {
-////                            mReceiverService.cancelFileTransfer(mTransId);
-////                        } catch (Exception e) {
-////                            e.printStackTrace();
-////                            Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
-////                        }
-//////                        mAlert.dismiss();
-////                        mRecvProgressBar.setProgress(0);
-////                    }
-////                });
-////                alertbox.setCancelable(false);
-////                mAlert = alertbox.create();
-////                mAlert.show();
-//            }
-//        });
-//    }
-//}
+    }
+}
