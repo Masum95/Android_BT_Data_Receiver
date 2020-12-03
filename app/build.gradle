@@ -1,14 +1,37 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.chaquo.python'
 
 android {
     compileSdkVersion 28
     buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.samsung.android.sdk.accessory.example.filetransfer.receiver"
+        sourceSets{
+            main{
+                python{
+                    srcDirs = ["src/main/python"]
+                }
+            }
+        }
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 6
         versionName '2.0.4'
+
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+
+        python{
+//            buildPython "C:/Users/Masum/AppData/Local/Microsoft/WindowsApps/python3.exe"
+            pip {
+                // A pip requirement specifier, with or without a version number:
+//                install "numpy"
+//                install "pandas"
+                install "-r", "requirements.txt"
+            }
+        }
+
     }
     buildTypes {
         release {

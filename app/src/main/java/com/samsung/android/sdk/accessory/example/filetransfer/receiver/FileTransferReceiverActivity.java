@@ -22,9 +22,11 @@
  */
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -35,10 +37,14 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -51,13 +57,18 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,7 +83,6 @@ import java.io.FileReader;
 public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
     private static boolean mIsUp = false;
-    private static final String DEST_DIRECTORY = Environment.getExternalStorageDirectory().getAbsolutePath(); // better is Environment.getExternalStorageDirectory()
     private int mTransId;
     private Context mCtxt;
     private String mDirPath;
@@ -106,6 +116,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
     private FileTransferReceiver mYourService;
     public static String PACKAGE_NAME;
 
+    final static String pkgFolderName = "BayesBeat/";
+    final static String csvFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName +  "csvFiles/";
+    private static final String DEST_DIRECTORY = csvFileDir;
 
 
 
@@ -130,6 +143,10 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_receiver_activity);
         myDb = new DatabaseHelper(this);
+
+        if(!Python.isStarted()){
+            Python.start(new AndroidPlatform(this));
+        }
 
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -229,11 +246,35 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         mCtxt = getApplicationContext();
         mRecvProgressBar = (ProgressBar) findViewById(R.id.RecvProgress);
         mRecvProgressBar.setMax(100);
+        File folder = new File(csvFileDir);
+        boolean success = true;
+        if (!folder.exists()) {
+            success = folder.mkdirs();
+        }
+        if (success) {
+            // Do something on success
+        } else {
+            // Do something else on failure
+        }
+        DownloadManager downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        Uri uri = Uri.parse("https://filesamples.com/samples/document/doc/sample1.doc");
+
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.setTitle("My File");
+        request.setDescription("Downloading");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setVisibleInDownloadsUi(false);
+        request.setDestinationUri(Uri.parse("file://" + folder + "/sample1.doc"));
+
+        downloadmanager.enqueue(request);
+
 
 
         Addbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                new ModelRunner().execute("my string parameter");
 
                 boolean isInserted = myDb.insertData("filename",
                         "smartwatch",
@@ -282,16 +323,12 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("tag", "hello from  ");
-
                 mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
                 if (isMyServiceRunning(mReceiverService.getClass())) {
 
                     startService(mServiceIntent);
 
                 }
-
-
             }
         });
 
@@ -309,6 +346,70 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                     this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    private class ModelRunner extends AsyncTask<String, Integer, String> {
+
+        // Runs in UI before background thread is called
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            // Do something like display a progress bar
+        }
+
+        // This is run in a background thread
+        @Override
+        protected String doInBackground(String... params) {
+            String modelName = "bayesbeat_cpu.pt";
+            AssetManager am = getAssets();
+            InputStream inputStream = null;
+            try {
+                inputStream = am.open(modelName);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+//            File file = createFileFromInputStream(inputStream);
+            try{
+                File f = new File(csvFileDir + modelName);
+                OutputStream outputStream = new FileOutputStream(f);
+                byte buffer[] = new byte[1024];
+                int length = 0;
+
+                while((length=inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer,0,length);
+                }
+
+                outputStream.close();
+                inputStream.close();
+            }catch (IOException e) {
+                //Logging exception
+            }
+            Python py = Python.getInstance();
+            PyObject pyObject = py.getModule("model_runner");
+//            PyObject obj = pyObject.callAttr("add", csvFileDir + "/myfile.csv");
+            String modelPath = csvFileDir;
+            PyObject obj = pyObject.callAttr("input_preprocessing", modelPath, csvFileDir );
+
+            Log.d("tag", "hello from python "+obj.toString());
+            return obj.toString();
+        }
+
+        // This is called from background thread but runs in UI
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+
+            // Do things like update the progress bar
+        }
+
+        // This runs in UI when background thread finishes
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            Toast.makeText(mCtxt, "python result"+result, Toast.LENGTH_LONG).show();
+
+            // Do things like hide the progress bar or change a TextView
+        }
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
 
