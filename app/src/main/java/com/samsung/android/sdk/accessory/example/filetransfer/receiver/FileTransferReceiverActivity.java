@@ -160,62 +160,33 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         }
 
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+//        Toolbar toolbar = findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
 
-        String csvfileString = this.getApplicationInfo().dataDir + File.separatorChar +  "myfile.csv";
-        File csvfile = new File(csvfileString);
-        AssetManager assetManager = getApplicationContext().getAssets();
+//        String csvfileString = this.getApplicationInfo().dataDir + File.separatorChar +  "myfile.csv";
+//        File csvfile = new File(csvfileString);
+//        AssetManager assetManager = getApplicationContext().getAssets();
+//
+//        try {
+//            InputStream csvStream = assetManager.open("myfile.csv");
+//
+//            String[] colsList = new String[]{"a","b","c","d","e","f","g","h","i","j","k","l","m","n"};
+//
+//            DataFrame df = new DataFrame();
+//            df.setColumnNames(colsList);
+//            df.readDataFrameFrom(csvStream);
+//            List<List<String>> myEntries = df.getDataFrame();// new java.util.ArrayList<List<String>>();
+//            String[] line;
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            Log.d("tag", "not found");
+//
+//            Toast.makeText(this, "The specified file was not found", Toast.LENGTH_SHORT).show();
+//        }
 
-        Log.d("tag", "here");
-        try {
-            InputStream csvStream = assetManager.open("myfile.csv");
-
-            String[] colsList = new String[]{"a","b","c","d","e","f","g","h","i","j","k","l","m","n"};
-
-            DataFrame df = new DataFrame();
-            df.setColumnNames(colsList);
-            df.readDataFrameFrom(csvStream);
-            List<List<String>> myEntries = df.getDataFrame();// new java.util.ArrayList<List<String>>();
-            String[] line;
-
-
-            Log.d("tag", String.valueOf(myEntries.get(0).get(1)));
-            Log.d("tag", String.valueOf(df.getNumRow()));
-            Log.d("tag", String.valueOf(df.getNumCol()));
-            Log.d("tag", String.valueOf(df.getCol("n")));
-
-            Log.d("tag", String.valueOf(df.getCol("c")));
-
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.d("tag", "not found");
-
-            Toast.makeText(this, "The specified file was not found", Toast.LENGTH_SHORT).show();
-        }
-
-
-
-//        classifier = new Classifier(Utils.assetFilePath(this,"mobilenet-v2.pt"));
         classifier = new Classifier(Utils.assetFilePath(this,"bayesbeat_cpu_codeless.pt"));
 
-//        Button capture = findViewById(R.id.capture);
-//
-//        capture.setOnClickListener(new View.OnClickListener(){
-//
-//            @Override
-//            public void onClick(View view){
-//
-//                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//
-//                startActivityForResult(cameraIntent,cameraRequestCode);
-//
-//            }
-//
-//
-//        });
 
 
 
