@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.app.Notification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -44,6 +45,8 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -79,6 +82,10 @@ import java.util.List;
 import com.opencsv.CSVReader;
 import java.io.IOException;
 import java.io.FileReader;
+
+
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_2_ID;
 
 public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
@@ -122,6 +129,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
 
     private static final String DEST_DIRECTORY = csvFileDir;
 
+    private NotificationManagerCompat notificationManager;
 
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -145,6 +153,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_receiver_activity);
         myDb = new DatabaseHelper(this);
+        notificationManager = NotificationManagerCompat.from(this);
 
         if(!Python.isStarted()){
             Python.start(new AndroidPlatform(this));
@@ -353,6 +362,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                     this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
+
     private class StarterTask extends AsyncTask<String, Integer, String> {
         @Override
         protected String doInBackground(String... params) {
@@ -424,7 +434,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");
 //            PyObject obj = pyObject.callAttr("add", csvFileDir + "/myfile.csv");
-            PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir, csvFileDir );
+            PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir + modelName, csvFileDir );
 
             Log.d("tag", "Result from python "+obj.toString());
             return obj.toString();
@@ -442,9 +452,17 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            Toast.makeText(mCtxt, "python result "+result, Toast.LENGTH_LONG).show();
+            String title = "Your Heart Update";
+            String message = result;
+            Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
+                    .setSmallIcon(R.drawable.ic_medicine)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                    .build();
+            notificationManager.notify(1, notification);
 
-            // Do things like hide the progress bar or change a TextView
         }
     }
 
