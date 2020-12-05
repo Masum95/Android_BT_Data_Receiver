@@ -8,15 +8,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
@@ -31,13 +28,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.concurrent.TimeUnit;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
+
+
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
 
 public class FileJobService extends JobService {
@@ -46,13 +42,8 @@ public class FileJobService extends JobService {
 
     public static String PACKAGE_NAME;
 
-    final static String pkgFolderName = "BayesBeat/";
-    final static String csvFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName + "csvFiles/";
-    final static String modelFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName + "model/";
     DownloadManager downloadmanager;
-    private static final String DEST_DIRECTORY = csvFileDir;
     BroadcastReceiver receiver;
-    final static String modelName = "bayesbeat_cpu.pt";
     private Context mCtxt;
     private NotificationManagerCompat notificationManager;
 
@@ -62,6 +53,7 @@ public class FileJobService extends JobService {
         AndroidNetworking.initialize(getApplicationContext());  // for api request
         AndroidNetworking.setParserFactory(new JacksonParserFactory());
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
+        final DatabaseHelper myDb = new DatabaseHelper(this);
 
         mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
@@ -93,10 +85,10 @@ public class FileJobService extends JobService {
                             String filePath = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                             // get other required data by changing the constant passed to getColumnIndex
                             Log.d("file_rcvd", filePath);
-//                            boolean isInserted = myDb.insertData(filePath,
-//                                    "server",
-//                                    1,
-//                                    1);
+                            boolean isInserted = myDb.insertData(filePath,
+                                    "server",
+                                    1,
+                                    1);
                             new ModelRunner().execute(filePath);
 
                         }
@@ -130,7 +122,7 @@ public class FileJobService extends JobService {
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");
             try {
-                PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir + modelName, csvFileName);
+                PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
                 Log.d("tag", "Result from python " + obj.toString());
                 return obj.toString();
 
@@ -190,7 +182,7 @@ public class FileJobService extends JobService {
                                 request.setDescription("Downloading");
                                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                                 request.setVisibleInDownloadsUi(false);
-                                request.setDestinationUri(Uri.parse("file://" + csvFileDir + "sample.csv"));
+                                request.setDestinationUri(Uri.parse("file://" + CSV_FILE_DIR + "sample.csv"));
 
                                 downloadmanager.enqueue(request);
 

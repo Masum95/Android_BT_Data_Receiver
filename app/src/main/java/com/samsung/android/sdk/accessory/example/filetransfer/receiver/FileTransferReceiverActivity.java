@@ -22,38 +22,25 @@
  */
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
-import android.Manifest;
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
-import android.app.Notification;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -64,47 +51,23 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-import android.support.v7.widget.Toolbar;
 
-import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.common.Priority;
-import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.JSONArrayRequestListener;
-import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.chaquo.python.PyObject;
-import com.chaquo.python.Python;
-import com.chaquo.python.android.AndroidPlatform;
-import com.jacksonandroidnetworking.JacksonParserFactory;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
-import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileJobService;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
-import com.opencsv.CSVReader;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.FileReader;
 
 
-import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
-import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_2_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 
 public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
@@ -141,11 +104,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     private FileTransferReceiver mYourService;
     public static String PACKAGE_NAME;
 
-    final static String pkgFolderName = "BayesBeat/";
-    final static String csvFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName + "csvFiles/";
-    final static String modelFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName + "model/";
+
+
     DownloadManager downloadmanager;
-    private static final String DEST_DIRECTORY = csvFileDir;
 
     private NotificationManagerCompat notificationManager;
 
@@ -182,7 +143,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 //                .setRequiresCharging(true)
 //                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                 .setPersisted(true)
-                .setPeriodic(   JobInfo.getMinPeriodMillis())
+                .setPeriodic( SCHEDULER_INTERVAL)
                 .build();
         JobScheduler scheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
         int resultCode = scheduler.schedule(info);
@@ -237,8 +198,8 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             Toast.makeText(mCtxt, " No SDCARD Present", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            File csvFolder = new File(csvFileDir);
-            File modelFolder = new File(modelFileDir);
+            File csvFolder = new File(CSV_FILE_DIR);
+            File modelFolder = new File(MODEL_FILE_DIR);
 
             boolean success = true;
             if (!csvFolder.exists()) {
@@ -319,7 +280,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 e.printStackTrace();
             }
             try {
-                File f = new File(modelFileDir + modelName);
+                File f = new File(MODEL_FILE_DIR + modelName);
                 OutputStream outputStream = new FileOutputStream(f);
                 byte buffer[] = new byte[1024];
                 int length = 0;
