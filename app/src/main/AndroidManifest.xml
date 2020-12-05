@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.samsung.accessory.permission.ACCESSORY_FRAMEWORK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" />
@@ -52,6 +53,9 @@
 
 
 
+        <service
+            android:name=".FileJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service android:name="com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver" />
 <!--        <service android:name="com.samsung.android.sdk.accessory.example.filetransfer.receiver.RecvrService" />-->
