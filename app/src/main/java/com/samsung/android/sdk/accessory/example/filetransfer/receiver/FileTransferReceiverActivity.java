@@ -1,16 +1,16 @@
-/*    
- * Copyright (c) 2015 Samsung Electronics Co., Ltd. All rights reserved. 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that 
+/*
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd. All rights reserved.
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
  * the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer. 
- *     * Redistributions in binary form must reproduce the above copyright notice, 
- *       this list of conditions and the following disclaimer in the documentation and/or 
- *       other materials provided with the distribution. 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright notice,
+ *       this list of conditions and the following disclaimer in the documentation and/or
+ *       other materials provided with the distribution.
  *     * Neither the name of Samsung Electronics Co., Ltd. nor the names of its contributors may be used to endorse
  *       or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
@@ -28,10 +28,12 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.Notification;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -60,9 +62,15 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONArrayRequestListener;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
+import com.jacksonandroidnetworking.JacksonParserFactory;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
@@ -80,6 +88,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.opencsv.CSVReader;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.FileReader;
 
@@ -87,7 +100,7 @@ import java.io.FileReader;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_2_ID;
 
-public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  extends AppCompatActivity {
+public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
     private static boolean mIsUp = false;
     private int mTransId;
@@ -114,7 +127,6 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
     ArrayAdapter<String> adapter;
 
 
-
     int cameraRequestCode = 001;
     Classifier classifier;
 
@@ -124,9 +136,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
     public static String PACKAGE_NAME;
 
     final static String pkgFolderName = "BayesBeat/";
-    final static String csvFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName +  "csvFiles/";
-    final static String modelFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName +  "model/";
-
+    final static String csvFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName + "csvFiles/";
+    final static String modelFileDir = Environment.getExternalStorageDirectory() + File.separator + pkgFolderName + "model/";
+    DownloadManager downloadmanager;
     private static final String DEST_DIRECTORY = csvFileDir;
 
     private NotificationManagerCompat notificationManager;
@@ -153,9 +165,14 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_receiver_activity);
         myDb = new DatabaseHelper(this);
-        notificationManager = NotificationManagerCompat.from(this);
 
-        if(!Python.isStarted()){
+        notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
+
+        AndroidNetworking.initialize(getApplicationContext());  // for api request
+        AndroidNetworking.setParserFactory(new JacksonParserFactory());
+        downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+
+        if (!Python.isStarted()) {
             Python.start(new AndroidPlatform(this));
         }
 
@@ -185,11 +202,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
 //            Toast.makeText(this, "The specified file was not found", Toast.LENGTH_SHORT).show();
 //        }
 
-        classifier = new Classifier(Utils.assetFilePath(this,"bayesbeat_cpu_codeless.pt"));
-
-
-
-
+        classifier = new Classifier(Utils.assetFilePath(this, "bayesbeat_cpu_codeless.pt"));
 
 
         PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -199,19 +212,19 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
 
         Cursor res = myDb.getLastN_Data(5);
 
-        listItems = new java.util.ArrayList<String>();;
+        listItems = new java.util.ArrayList<String>();
+        ;
         listItems.add("List of received files");
         while (res.moveToNext()) {
-            String id = res.getString( res.getColumnIndex("id") ); // id is column name in db
+            String id = res.getString(res.getColumnIndex("id")); // id is column name in db
             String name = res.getString(res.getColumnIndex("name"));
 
-            listItems.add("file :" +  name );
+            listItems.add("file :" + name);
 
         }
 
 
-
-        adapter=new ArrayAdapter<String>(this,
+        adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1,
                 listItems);
         listview.setAdapter(adapter);
@@ -221,7 +234,6 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         //getting buttons from xml
         buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonStop = (Button) findViewById(R.id.buttonStop);
-
 
 
         mIsUp = true;
@@ -242,35 +254,102 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         }
         new StarterTask().execute("my string parameter");
 
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+                    long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
 
-//        DownloadManager downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-//        Uri uri = Uri.parse("https://filesamples.com/samples/document/doc/sample1.doc");
-//
-//        DownloadManager.Request request = new DownloadManager.Request(uri);
-//        request.setTitle("My File");
-//        request.setDescription("Downloading");
-//        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-//        request.setVisibleInDownloadsUi(false);
-//        request.setDestinationUri(Uri.parse("file://" + folder + "/sample1.doc"));
-//
-//        downloadmanager.enqueue(request);
+                    DownloadManager manager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
 
+                    DownloadManager.Query query = new DownloadManager.Query();
+                    query.setFilterById(downloadId);
+
+                    Cursor cursor = manager.query(query);
+
+                    if (cursor.moveToFirst()) {
+                        int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
+                        int reason = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_REASON));
+                        if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                            // process download
+                            String filePath = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                            // get other required data by changing the constant passed to getColumnIndex
+                            Log.d("file_rcvd", filePath);
+                            boolean isInserted = myDb.insertData(filePath,
+                                    "server",
+                                    1,
+                                    1);
+                            if (isInserted)
+                                Toast.makeText(mCtxt, "Server Data Inserted", Toast.LENGTH_LONG).show();
+                            else
+                                Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
+                        }
+                        Log.d("file_rcvd_here", String.valueOf(status) + " " + String.valueOf(reason));
+
+
+                    }
+
+                    cursor.close();
+
+                }
+            }
+        };
+
+        registerReceiver(receiver, new IntentFilter(
+                DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
 
         Addbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                new ModelRunner().execute("my string parameter");
+//                AndroidNetworking.get("https://fierce-cove-29863.herokuapp.com/getAllUsers/{pageNumber}")
+                AndroidNetworking.get("https://bayesbeat.herokuapp.com/file/upload/")
+//                        .addPathParameter("pageNumber", "0")
+                        .addQueryParameter("start_time", "2020-11-27T19:58:19")
+                        .addQueryParameter("end_time", "2020-11-27T19:58:19")
+//                        .addQueryParameter("device_id", "3")
+//                        .addHeaders("token", "1234")
+                        .setPriority(Priority.LOW)
+                        .build()
+                        .getAsJSONObject(new JSONObjectRequestListener() {
 
-                boolean isInserted = myDb.insertData("filename",
-                        "smartwatch",
-                        1,
-                        0);
-                if(isInserted == true)
-                    Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                // do anything with response
+                                Log.d("json_response", String.valueOf(response));
+                                try {
+                                    JSONArray ara = response.getJSONArray("data");
+                                    JSONObject obj = ara.getJSONObject(0);
+                                    String down_url = String.valueOf(obj.getString("file"));
+                                    String file_name = String.valueOf(obj.getString("file_name"));
+                                    Log.d("json_response", down_url);
+                                    Uri uri = Uri.parse(down_url);
+
+                                    DownloadManager.Request request = new DownloadManager.Request(uri);
+                                    request.setTitle("CSV File");
+                                    request.setDescription("Downloading");
+                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                                    request.setVisibleInDownloadsUi(false);
+                                    request.setDestinationUri(Uri.parse("file://" + csvFileDir + "sample.csv"));
+
+                                    downloadmanager.enqueue(request);
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+
+                            @Override
+                            public void onError(ANError error) {
+                                // handle error
+                                Log.d("json_response_eror", String.valueOf(error));
+                            }
+                        });
+
+                new ModelRunner().execute("my string parameter");
 
             }
         });
@@ -284,10 +363,10 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                 listItems.add("List of received files");
 
                 while (res.moveToNext()) {
-                    String id = res.getString( res.getColumnIndex("id") ); // id is column name in db
+                    String id = res.getString(res.getColumnIndex("id")); // id is column name in db
                     String name = res.getString(res.getColumnIndex("name"));
 
-                    listItems.add("file :" +  name );
+                    listItems.add("file :" + name);
 
                 }
 
@@ -330,7 +409,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
             }
         }
         mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
-                    this.mServiceConnection, Context.BIND_AUTO_CREATE);
+                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 
@@ -345,19 +424,19 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            try{
+            try {
                 File f = new File(modelFileDir + modelName);
                 OutputStream outputStream = new FileOutputStream(f);
                 byte buffer[] = new byte[1024];
                 int length = 0;
 
-                while((length=inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer,0,length);
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
                 }
 
                 outputStream.close();
                 inputStream.close();
-            }catch (IOException e) {
+            } catch (IOException e) {
                 //Logging exception
             }
 
@@ -387,27 +466,27 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
                 e.printStackTrace();
             }
 //            File file = createFileFromInputStream(inputStream);
-            try{
+            try {
                 File f = new File(modelFileDir + modelName);
                 OutputStream outputStream = new FileOutputStream(f);
                 byte buffer[] = new byte[1024];
                 int length = 0;
 
-                while((length=inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer,0,length);
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
                 }
 
                 outputStream.close();
                 inputStream.close();
-            }catch (IOException e) {
+            } catch (IOException e) {
                 //Logging exception
             }
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");
 //            PyObject obj = pyObject.callAttr("add", csvFileDir + "/myfile.csv");
-            PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir + modelName, csvFileDir );
+            PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir + modelName, csvFileDir);
 
-            Log.d("tag", "Result from python "+obj.toString());
+            Log.d("tag", "Result from python " + obj.toString());
             return obj.toString();
         }
 
@@ -438,18 +517,18 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(requestCode == cameraRequestCode && resultCode == RESULT_OK){
+        if (requestCode == cameraRequestCode && resultCode == RESULT_OK) {
 
-            Intent resultView = new Intent(this,Result.class);
+            Intent resultView = new Intent(this, Result.class);
 
-            resultView.putExtra("imagedata",data.getExtras());
+            resultView.putExtra("imagedata", data.getExtras());
 
             Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
 
             String pred = classifier.predict(imageBitmap);
-            resultView.putExtra("pred",pred);
+            resultView.putExtra("pred", pred);
 
             startActivity(resultView);
 
@@ -463,14 +542,13 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             Log.d("list----", String.valueOf(service.service));
             if (serviceClass.getName().equals(service.service.getClassName())) {
-                Log.i ("Service status", "Running");
+                Log.i("Service status", "Running");
                 return true;
             }
         }
-        Log.i ("Service status", "Not running");
+        Log.i("Service status", "Not running");
         return false;
     }
-
 
 
     @Override
@@ -526,8 +604,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements>  e
         return super.onKeyDown(keyCode, event);
     }
 
-    public static boolean isUp()
-    {
+    public static boolean isUp() {
         return mIsUp;
     }
 
