@@ -59,7 +59,7 @@ def input_preprocessing(model_path, csv_filepath):
     :return:
     """
 
-	df = pd.read_csv(csv_filepath + "uncle_Mar4.csv", engine='python', header=None)
+	df = pd.read_csv(csv_filepath, engine='python', header=None)
 	df = df[df[0]>40]
 	ppg = df[1].to_numpy()
 	# return ppg

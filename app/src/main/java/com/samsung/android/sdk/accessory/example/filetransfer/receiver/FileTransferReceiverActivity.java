@@ -284,6 +284,8 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                                 Toast.makeText(mCtxt, "Server Data Inserted", Toast.LENGTH_LONG).show();
                             else
                                 Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
+                            new ModelRunner().execute(filePath);
+
                         }
                         Log.d("file_rcvd_here", String.valueOf(status) + " " + String.valueOf(reason));
 
@@ -349,7 +351,6 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                             }
                         });
 
-                new ModelRunner().execute("my string parameter");
 
             }
         });
@@ -446,17 +447,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
     private class ModelRunner extends AsyncTask<String, Integer, String> {
 
-        // Runs in UI before background thread is called
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            // Do something like display a progress bar
-        }
-
-        // This is run in a background thread
         @Override
         protected String doInBackground(String... params) {
+            String csvFileName = params[0];
             String modelName = "bayesbeat_cpu.pt";
             AssetManager am = getAssets();
             InputStream inputStream = null;
@@ -484,23 +477,19 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");
 //            PyObject obj = pyObject.callAttr("add", csvFileDir + "/myfile.csv");
-            PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir + modelName, csvFileDir);
+            try {
+                PyObject obj = pyObject.callAttr("input_preprocessing", modelFileDir + modelName, csvFileName);
+                Log.d("tag", "Result from python " + obj.toString());
+                return obj.toString();
 
-            Log.d("tag", "Result from python " + obj.toString());
-            return obj.toString();
+            }catch (Exception e){
+                return "";
+            }
         }
 
-        // This is called from background thread but runs in UI
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-
-            // Do things like update the progress bar
-        }
-
-        // This runs in UI when background thread finishes
         @Override
         protected void onPostExecute(String result) {
+            if (result.isEmpty()) return;
             super.onPostExecute(result);
             String title = "Your Heart Update";
             String message = result;
