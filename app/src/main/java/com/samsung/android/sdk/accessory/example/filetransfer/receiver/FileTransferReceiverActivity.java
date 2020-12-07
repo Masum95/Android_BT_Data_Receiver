@@ -22,6 +22,7 @@
  */
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
@@ -31,6 +32,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -39,8 +41,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.Trace;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -71,6 +77,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 
 public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> extends AppCompatActivity {
     private static final String TAG = "FileTransferReceiverActivity";
+    private static final int STORAGE_PERMISSION_CODE = 1;
     private static boolean mIsUp = false;
     private int mTransId;
     private Context mCtxt;
@@ -128,31 +135,18 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         }
     };
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ft_receiver_activity);
+
+        mIsUp = true;
+        mCtxt = getApplicationContext();
         myDb = new DatabaseHelper(this);
 
-
-
-        Log.d("tag", String.valueOf(JobInfo.getMinPeriodMillis()));
-
-        ComponentName componentName = new ComponentName(this, FileJobService.class);
-        JobInfo info = new JobInfo.Builder(123, componentName)
-//                .setRequiresCharging(true)
-//                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPersisted(true)
-                .setPeriodic( SCHEDULER_INTERVAL)
-                .build();
-        JobScheduler scheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
-        int resultCode = scheduler.schedule(info);
-        if (resultCode == JobScheduler.RESULT_SUCCESS) {
-            Log.d("tag", "Job scheduled");
-        } else {
-            Log.d("tag", "Job scheduling failed");
-        }
-
+        if(hasStoragePermission())
+            new StarterTask().execute();
+        requestStoragePermission();
 
         classifier = new Classifier(Utils.assetFilePath(this, "bayesbeat_cpu_codeless.pt"));
 
@@ -187,30 +181,13 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonStop = (Button) findViewById(R.id.buttonStop);
 
-
-        mIsUp = true;
-        mCtxt = getApplicationContext();
-        mRecvProgressBar = (ProgressBar) findViewById(R.id.RecvProgress);
-        mRecvProgressBar.setMax(100);
+//
+//        mRecvProgressBar = (ProgressBar) findViewById(R.id.RecvProgress);
+//        mRecvProgressBar.setMax(100);
 
 
-        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            Toast.makeText(mCtxt, " No SDCARD Present", Toast.LENGTH_SHORT).show();
-            finish();
-        } else {
-            File csvFolder = new File(CSV_FILE_DIR);
-            File modelFolder = new File(MODEL_FILE_DIR);
 
-            boolean success = true;
-            if (!csvFolder.exists()) {
-                success = csvFolder.mkdirs();
-            }
-            if (!modelFolder.exists()) {
-                success = modelFolder.mkdirs();
-            }
-        }
 
-        new StarterTask().execute("my string parameter");
 
         Addbutton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -267,10 +244,90 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    private boolean hasStoragePermission(){
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+            return true;
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+            return true;
+        return false;
+    }
+
+
+    private void requestStoragePermission() {
+
+        if (hasStoragePermission()) return;
+//        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
+//            return;
+
+
+        ActivityCompat.requestPermissions(this, new String[]
+                {
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//                        android.Manifest.permission.READ_PHONE_STATE,
+                }, STORAGE_PERMISSION_CODE);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
+        switch (requestCode) {
+            case 1:
+                boolean isPerpermissionForAllGranted = false;
+                if (grantResults.length > 0 && permissions.length == grantResults.length) {
+                    for (int i = 0; i < permissions.length; i++) {
+                        Log.d("tag-->", String.valueOf(permissions[i]) + " " + String.valueOf(grantResults[i]) + " " + PackageManager.PERMISSION_GRANTED);
+
+                        if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                            isPerpermissionForAllGranted = true;
+                        } else {
+                            isPerpermissionForAllGranted = false;
+                        }
+                    }
+
+                    Log.e("value", "Permission Granted, Now you can use local drive .");
+                } else {
+                    isPerpermissionForAllGranted = true;
+                    Log.e("value", "Permission Denied, You cannot use local drive .");
+                }
+                if (isPerpermissionForAllGranted) {
+                    Log.d("tag", "permission granted ");
+                    new StarterTask().execute("my string parameter");
+                }
+                break;
+        }
+    }
 
     private class StarterTask extends AsyncTask<String, Integer, String> {
         @Override
         protected String doInBackground(String... params) {
+
+            Log.d("tag", " here before  "+ CSV_FILE_DIR);
+
+            File csvFolder = new File(CSV_FILE_DIR);
+            File modelFolder = new File(MODEL_FILE_DIR);
+
+
+            boolean success = true;
+            if (!csvFolder.exists()) {
+                success = csvFolder.mkdirs();
+                Log.d("tag", "Files Created here "+ CSV_FILE_DIR + success);
+
+            }
+            if (!modelFolder.exists()) {
+                success = modelFolder.mkdirs();
+            }
+            if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                Toast.makeText(mCtxt, " No SDCARD Present", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+
+            }
+            Log.d("tag", "Files Created "+ CSV_FILE_DIR);
+
+
+
+
+
             String modelName = "bayesbeat_cpu.pt";
             AssetManager am = getAssets();
             InputStream inputStream = null;
@@ -295,28 +352,25 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 //Logging exception
             }
 
+
+
+            ComponentName componentName = new ComponentName(mCtxt, FileJobService.class);
+            JobInfo info = new JobInfo.Builder(123, componentName)
+//                .setRequiresCharging(true)
+//                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                    .setPersisted(true)
+                    .setPeriodic( SCHEDULER_INTERVAL)
+                    .build();
+            JobScheduler scheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+            int resultCode = scheduler.schedule(info);
+            if (resultCode == JobScheduler.RESULT_SUCCESS) {
+                Log.d("tag", "Job scheduled");
+            } else {
+                Log.d("tag", "Job scheduling failed");
+            }
+
             return "model copied";
         }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == cameraRequestCode && resultCode == RESULT_OK) {
-
-            Intent resultView = new Intent(this, Result.class);
-
-            resultView.putExtra("imagedata", data.getExtras());
-
-            Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
-
-            String pred = classifier.predict(imageBitmap);
-            resultView.putExtra("pred", pred);
-
-            startActivity(resultView);
-
-        }
-
     }
 
 
@@ -392,6 +446,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         return mIsUp;
     }
 
+
     private FileAction getFileAction() {
         return new FileAction() {
             @Override
@@ -399,12 +454,10 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        if (mAlert != null && mAlert.isShowing()) {
-//                            mAlert.dismiss();
-//                        }
+
                         Toast.makeText(mCtxt, "Transfer cancelled " + "Error", Toast.LENGTH_SHORT).show();
 
-                        mRecvProgressBar.setProgress(0);
+//                        mRecvProgressBar.setProgress(0);
 
 
                     }
@@ -413,12 +466,12 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
             @Override
             public void onFileActionProgress(final long progress) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mRecvProgressBar.setProgress((int) progress);
-                    }
-                });
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mRecvProgressBar.setProgress((int) progress);
+//                    }
+//                });
             }
 
             @Override
@@ -426,20 +479,18 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mRecvProgressBar.setProgress(0);
-//                        if (mAlert != null) {
-//                            mAlert.dismiss();
-//                        }
-                        Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
+//                        mRecvProgressBar.setProgress(0);
+
+//                        Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
 
                         boolean isInserted = myDb.insertData(fileName,
                                 "sw",
                                 0,
                                 0);
-                        if (isInserted == true)
-                            Toast.makeText(mCtxt, "Data Inserted", Toast.LENGTH_LONG).show();
+                        if(isInserted == true)
+                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
                         else
-                            Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
+                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
 
                     }
                 });
@@ -464,10 +515,89 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                             Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
                         }
 
+
                     }
                 });
             }
         };
-
     }
+
+//    private FileAction getFileAction() {
+//        return new FileAction() {
+//            @Override
+//            public void onFileActionError() {
+////                runOnUiThread(new Runnable() {
+////                    @Override
+////                    public void run() {
+//////                        if (mAlert != null && mAlert.isShowing()) {
+//////                            mAlert.dismiss();
+//////                        }
+////                        Toast.makeText(mCtxt, "Transfer cancelled " + "Error", Toast.LENGTH_SHORT).show();
+////
+//////                        mRecvProgressBar.setProgress(0);
+////
+////
+////                    }
+////                });
+//            }
+//
+//            @Override
+//            public void onFileActionProgress(final long progress) {
+////                runOnUiThread(new Runnable() {
+////                    @Override
+////                    public void run() {
+////                        mRecvProgressBar.setProgress((int) progress);
+////                    }
+////                });
+//            }
+//
+//            @Override
+//            public void onFileActionTransferComplete(final String fileName) {
+////                runOnUiThread(new Runnable() {
+////                    @Override
+////                    public void run() {
+////                        mRecvProgressBar.setProgress(0);
+//////                        if (mAlert != null) {
+//////                            mAlert.dismiss();
+//////                        }
+////                        Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
+////
+////                        boolean isInserted = myDb.insertData(fileName,
+////                                "sw",
+////                                0,
+////                                0);
+////                        if (isInserted == true)
+////                            Toast.makeText(mCtxt, "Data Inserted", Toast.LENGTH_LONG).show();
+////                        else
+////                            Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
+////
+////                    }
+////                });
+//            }
+//
+//            @Override
+//            public void onFileActionTransferRequested(int id, String path) {
+//                mFilePath = path;
+//                mTransId = id;
+//
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//
+//                        try {
+//                            String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"), mFilePath.length());
+//                            mReceiverService.receiveFile(mTransId, DEST_DIRECTORY
+//                                    + receiveFileName, true);
+//
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                            Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
+//                        }
+//
+//                    }
+//                });
+//            }
+//        };
+//
+//    }
 }

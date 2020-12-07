@@ -29,7 +29,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_UPLOAD_GET_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
 
 
@@ -46,6 +50,22 @@ public class FileJobService extends JobService {
     BroadcastReceiver receiver;
     private Context mCtxt;
     private NotificationManagerCompat notificationManager;
+    private int download_count = 0;
+    private List<List<Integer>> resultList;
+
+
+    private static List<Integer> convertStringToIntAra(String str){
+        String[] result = str.split("[ ,\\]\\[]");
+        List<Integer> list=new ArrayList<Integer>();
+
+        for(String res: result){
+            try{
+                list.add(Integer.parseInt(res));
+            }catch(NumberFormatException e){}
+        }
+        return list;
+    }
+
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -124,6 +144,7 @@ public class FileJobService extends JobService {
             try {
                 PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
                 Log.d("tag", "Result from python " + obj.toString());
+                resultList.add(convertStringToIntAra(obj.toString()));
                 return obj.toString();
 
             } catch (Exception e) {
@@ -135,15 +156,20 @@ public class FileJobService extends JobService {
         protected void onPostExecute(String result) {
             if (result.isEmpty()) return;
             super.onPostExecute(result);
-            String title = "Your Heart Update";
-            Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
-                    .setSmallIcon(R.drawable.ic_medicine)
-                    .setContentTitle(title)
-                    .setContentText(result)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                    .build();
-            notificationManager.notify(1, notification);
+            download_count--;
+            String res = "";
+            if(download_count == 0 ){
+                String title = "Your Heart Update";
+                Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
+                        .setSmallIcon(R.drawable.ic_medicine)
+                        .setContentTitle(title)
+                        .setContentText(resultList.toString())
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                        .build();
+                notificationManager.notify(2, notification);
+            }
+
 
         }
     }
@@ -155,7 +181,7 @@ public class FileJobService extends JobService {
         @Override
         protected String doInBackground(String... params) {
 
-            AndroidNetworking.get("https://bayesbeat.herokuapp.com/file/upload/")
+            AndroidNetworking.get(FILE_UPLOAD_GET_URL)
 //                        .addPathParameter("pageNumber", "0")
                     .addQueryParameter("start_time", "2020-11-27T19:58:19")
                     .addQueryParameter("end_time", "2020-11-27T19:58:19")
@@ -171,20 +197,25 @@ public class FileJobService extends JobService {
                             Log.d("json_response", String.valueOf(response));
                             try {
                                 JSONArray ara = response.getJSONArray("data");
-                                JSONObject obj = ara.getJSONObject(0);
-                                String down_url = String.valueOf(obj.getString("file"));
-                                String file_name = String.valueOf(obj.getString("file_name"));
-                                Log.d("json_response", down_url);
-                                Uri uri = Uri.parse(down_url);
+                                resultList = new ArrayList<List<Integer>>();
 
-                                DownloadManager.Request request = new DownloadManager.Request(uri);
-                                request.setTitle("CSV File");
-                                request.setDescription("Downloading");
-                                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                                request.setVisibleInDownloadsUi(false);
-                                request.setDestinationUri(Uri.parse("file://" + CSV_FILE_DIR + "sample.csv"));
+                                download_count = ara.length();
+                                for (int i = 0 ; i < ara.length(); i++) {
+                                    JSONObject obj = ara.getJSONObject(i);
+                                    String down_url = String.valueOf(obj.getString("file"));
+                                    String file_name = String.valueOf(obj.getString("file_name"));
+                                    Log.d("json_response", down_url);
+                                    Uri uri = Uri.parse(down_url);
 
-                                downloadmanager.enqueue(request);
+                                    DownloadManager.Request request = new DownloadManager.Request(uri);
+                                    request.setTitle("CSV File");
+                                    request.setDescription("Downloading");
+                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                                    request.setVisibleInDownloadsUi(false);
+                                    request.setDestinationUri(Uri.parse("file://" + CSV_FILE_DIR + file_name));
+
+                                    downloadmanager.enqueue(request);
+                                }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();

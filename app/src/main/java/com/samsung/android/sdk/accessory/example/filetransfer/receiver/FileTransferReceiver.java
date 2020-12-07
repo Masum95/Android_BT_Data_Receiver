@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd. All rights reserved. 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that 
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd. All rights reserved.
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
  * the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer. 
- *     * Redistributions in binary form must reproduce the above copyright notice, 
- *       this list of conditions and the following disclaimer in the documentation and/or 
- *       other materials provided with the distribution. 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright notice,
+ *       this list of conditions and the following disclaimer in the documentation and/or
+ *       other materials provided with the distribution.
  *     * Neither the name of Samsung Electronics Co., Ltd. nor the names of its contributors may be used to endorse
  *       or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
@@ -62,6 +62,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
+
 public class FileTransferReceiver extends SAAgent {
     private static final String TAG = "FileTransferReceiver";
     private Context mContext;
@@ -73,9 +75,8 @@ public class FileTransferReceiver extends SAAgent {
     private FileAction mFileAction = null;
 
 
-//-----------------------------------------------------
+    //-----------------------------------------------------
     public int counter=0;
-    private MediaPlayer player;
 
 
 
@@ -98,7 +99,7 @@ public class FileTransferReceiver extends SAAgent {
                 .setPriority(NotificationManager.IMPORTANCE_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build();
-        startForeground(2, notification);
+        startForeground(1, notification);
     }
 
 
@@ -119,15 +120,6 @@ public class FileTransferReceiver extends SAAgent {
         else if (intent.getAction().equals(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION) )) {
             Log.d("tag", "Received Start Foreground Intent ");
 
-            startTimer();
-            player = MediaPlayer.create(this,
-                    Settings.System.DEFAULT_RINGTONE_URI);
-
-            player.setLooping(true);
-
-            //staring the player
-            player.start();
-
             return START_STICKY;
         }
 
@@ -138,26 +130,6 @@ public class FileTransferReceiver extends SAAgent {
 
     }
 
-
-
-    private Timer timer;
-    private TimerTask timerTask;
-    public void startTimer() {
-        timer = new Timer();
-        timerTask = new TimerTask() {
-            public void run() {
-                Log.i("Count", "=========  "+ (counter++));
-            }
-        };
-        timer.schedule(timerTask, 1000, 1000); //
-    }
-
-    public void stoptimertask() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
-    }
 
 //    @Nullable
 //    @Override
@@ -182,14 +154,6 @@ public class FileTransferReceiver extends SAAgent {
         else
             startForeground(1, new Notification());
 
-//        player = MediaPlayer.create(this,
-//                Settings.System.DEFAULT_RINGTONE_URI);
-//
-//        player.setLooping(true);
-//
-//        //staring the player
-//        player.start();
-
 
         mContext = getApplicationContext();
         Log.d(TAG, "On Create of Sample FileTransferReceiver Service");
@@ -197,54 +161,64 @@ public class FileTransferReceiver extends SAAgent {
             @Override
             public void onProgressChanged(int transId, int progress) {
                 Log.d(TAG, "onProgressChanged : " + progress + " for transaction : " + transId);
-                if (mFileAction != null) {
-                    mFileAction.onFileActionProgress(progress);
-                }
+//                if (mFileAction != null) {
+//                    mFileAction.onFileActionProgress(progress);
+//                }
             }
 
             @Override
             public void onTransferCompleted(int transId, String fileName, int errorCode) {
                 Log.d(TAG, "onTransferCompleted: tr id : " + transId + " file name : " + fileName + " error : "
-                            + errorCode);
-                if (errorCode == SAFileTransfer.ERROR_NONE) {
-                    mFileAction.onFileActionTransferComplete(fileName);
-                } else {
-                    mFileAction.onFileActionError();
-                }
+                        + errorCode);
+//                if (errorCode == SAFileTransfer.ERROR_NONE) {
+//                    mFileAction.onFileActionTransferComplete(fileName);
+//                } else {
+//                    mFileAction.onFileActionError();
+//                }
             }
 
             @Override
             public void onTransferRequested(int id, String fileName) {
                 Log.d(TAG, "onTransferRequested: id- " + id + " file name: " + fileName);
-                if (FileTransferReceiverActivity.isUp()) {
-                    Log.d(TAG, "Activity is up");
-                    mFileAction.onFileActionTransferRequested(id, fileName);
-                } else {
-                    Log.d(TAG, "Activity is not up, invoke activity");
-                    mContext.startActivity(new Intent()
-                                .setClass(mContext, FileTransferReceiverActivity.class)
-                                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                .setAction("incomingFT").putExtra("tx", id)
-                                .putExtra("fileName", fileName));
-                    int counter = 0;
-                    while (counter < 10) {
-                        counter++;
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (mFileAction != null) {
-                            mFileAction.onFileActionTransferRequested(id, fileName);
-                            break;
-                        }
-                    }
-                }
+
+
+                String receiveFileName = fileName.substring(fileName.lastIndexOf("/"), fileName.length());
+                receiveFile(id, DEST_DIRECTORY
+                        + receiveFileName, true);
+
+//                if (FileTransferReceiverActivity.isUp()) {
+//                    Log.d(TAG, "Activity is up");
+////                    mFileAction.onFileActionTransferRequested(id, fileName);
+//                    String receiveFileName = fileName.substring(fileName.lastIndexOf("/"), fileName.length());
+//                    receiveFile(id, DEST_DIRECTORY
+//                            + receiveFileName, true);
+//
+//                } else {
+//                    Log.d(TAG, "Activity is not up, invoke activity");
+//                    mContext.startActivity(new Intent()
+//                            .setClass(mContext, FileTransferReceiverActivity.class)
+//                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                            .setAction("incomingFT").putExtra("tx", id)
+//                            .putExtra("fileName", fileName));
+//                    int counter = 0;
+//                    while (counter < 10) {
+//                        counter++;
+//                        try {
+//                            Thread.sleep(500);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                        if (mFileAction != null) {
+////                            mFileAction.onFileActionTransferRequested(id, fileName);
+//                            break;
+//                        }
+//                    }
+//                }
             }
 
             @Override
             public void onCancelAllCompleted(int errorCode) {
-                mFileAction.onFileActionError();
+//                mFileAction.onFileActionError();
                 Log.e(TAG, "onCancelAllCompleted: Error Code " + errorCode);
             }
         };
@@ -283,15 +257,11 @@ public class FileTransferReceiver extends SAAgent {
     public void onDestroy() {
         try{
             mSAFileTransfer.close();
-
-            stoptimertask();
         }catch (Exception e1) {
             e1.printStackTrace();
         }
         mSAFileTransfer = null;
         super.onDestroy();
-
-
 
         Log.i(TAG, "FileTransferReceiver Service is Stopped.");
     }
@@ -363,7 +333,7 @@ public class FileTransferReceiver extends SAAgent {
 
         @Override
         public void onError(int channelId, String errorMessage, int errorCode) {
-            mFileAction.onFileActionError();
+//            mFileAction.onFileActionError();
             Log.e(TAG, "Connection is not alive ERROR: " + errorMessage + "  " + errorCode);
         }
     }
