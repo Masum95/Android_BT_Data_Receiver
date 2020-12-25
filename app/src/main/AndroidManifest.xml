@@ -16,6 +16,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.Manifest.permission.INTERNET" />
     <uses-permission android:name="android.Manifest.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission  android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.GET_TASKS" />
@@ -51,8 +52,8 @@
         </activity>
 
 
-
-        <service android:name=".ExampleService" />
+        <service android:name=".ClosingService"
+            android:stopWithTask="false"/>
 
         <service
             android:name=".FileJobService"
@@ -60,7 +61,12 @@
 
         <service android:name="com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver" />
 <!--        <service android:name="com.samsung.android.sdk.accessory.example.filetransfer.receiver.RecvrService" />-->
-
+<!--        <receiver android:process=":remote" android:name=".Alarm"></receiver>-->
+<!--        <service-->
+<!--            android:name=".YourService"-->
+<!--            android:enabled="true"-->
+<!--            android:process=":your_service" >-->
+<!--        </service>-->
 
         <receiver
             android:name="Restarter"

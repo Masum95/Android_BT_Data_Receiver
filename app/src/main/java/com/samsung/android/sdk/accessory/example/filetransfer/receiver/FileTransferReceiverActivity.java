@@ -35,14 +35,15 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
+import android.net.Uri;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.Trace;
-import android.support.annotation.NonNull;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -58,6 +59,11 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
@@ -68,6 +74,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.io.IOException;
+import java.util.List;
 
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
@@ -144,11 +151,52 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         mCtxt = getApplicationContext();
         myDb = new DatabaseHelper(this);
 
-        if(hasStoragePermission())
-            new StarterTask().execute();
-        requestStoragePermission();
+//        if(hasStoragePermission())
 
-        classifier = new Classifier(Utils.assetFilePath(this, "bayesbeat_cpu_codeless.pt"));
+        if (!hasPermissions(this, PERMISSIONS)) {
+            requestStoragePermission();
+        }else{
+            Log.d("permisionn  ","----------ase already");
+            new StarterTask().execute();
+
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            String packageName = getPackageName();
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + packageName));
+                startActivity(intent);
+            }
+        }
+
+
+        String manufacturer = "xiaomi";
+        if(manufacturer.equalsIgnoreCase(android.os.Build.MANUFACTURER)) {
+            //this will open auto start screen where user can enable permission for your app
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            startActivity(intent);
+        }
+
+
+
+//        requestStoragePermission();
+
+//
+//
+//        mServiceIntent = new Intent(FileTransferReceiverActivity.this, FileTransferReceiver.class);
+//        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+//
+//        startService(mServiceIntent);
+
+//        Intent serviceIntent = new Intent(this, ExampleService.class);
+//        serviceIntent.putExtra("inputExtra", "input text sample");
+//        ContextCompat.startForegroundService(this, serviceIntent);
+
+//        classifier = new Classifier(Utils.assetFilePath(this, "bayesbeat_cpu_codeless.pt"));
 
 
         PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -156,19 +204,20 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
         listview = (ListView) findViewById(R.id.list);
 
-        Cursor res = myDb.getLastN_Data(5);
+        List<FileModel> filesList = filesList = myDb.getFiles(5);
+
+
+
 
         listItems = new java.util.ArrayList<String>();
-        ;
         listItems.add("List of received files");
-        while (res.moveToNext()) {
-            String id = res.getString(res.getColumnIndex("id")); // id is column name in db
-            String name = res.getString(res.getColumnIndex("name"));
-
+        for(FileModel file: filesList){
+            String name = file.getFileName(); // id is column name in db
             listItems.add("file :" + name);
-
         }
 
+
+        Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));
 
         adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1,
@@ -199,18 +248,15 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         reloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Cursor res = myDb.getLastN_Data(5);
-
+                List<FileModel> filesList = filesList = myDb.getFiles(5);
                 listItems.clear();
                 listItems.add("List of received files");
-
-                while (res.moveToNext()) {
-                    String id = res.getString(res.getColumnIndex("id")); // id is column name in db
-                    String name = res.getString(res.getColumnIndex("name"));
-
+                for(FileModel file: filesList){
+                    String name = file.getFileName(); // id is column name in db
                     listItems.add("file :" + name);
-
                 }
+
+
 
                 adapter.notifyDataSetChanged();
 
@@ -240,8 +286,14 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             }
         });
 
-        mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
-                this.mServiceConnection, Context.BIND_AUTO_CREATE);
+//        mServiceIntent = new Intent();
+//        mServiceIntent.setAction("restartservice");
+//        mServiceIntent.setClass(this, Restarter.class);
+//        this.sendBroadcast(mServiceIntent);
+        Log.d("why ", "-------------------------------------------------------------man");
+
+//        mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
+//                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private boolean hasStoragePermission(){
@@ -251,22 +303,35 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             return true;
         return false;
     }
+    int PERMISSION_ALL = 1;
+    String[] PERMISSIONS = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+//            android.Manifest.permission.WRITE_CONTACTS,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//            android.Manifest.permission.READ_SMS,
+    };
 
+
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     private void requestStoragePermission() {
 
-        if (hasStoragePermission()) return;
-//        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
-//            return;
+        if (hasPermissions(this, PERMISSIONS)) {
+            return;
+        }
+        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
 
-
-        ActivityCompat.requestPermissions(this, new String[]
-                {
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-//                        android.Manifest.permission.READ_PHONE_STATE,
-                }, STORAGE_PERMISSION_CODE);
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
@@ -390,35 +455,42 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
     @Override
     protected void onStart() {
+        Log.d("activity", "in on start ");
+
         mIsUp = true;
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-
+//        mServiceIntent = new Intent();
+//        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+//        mServiceIntent.setClass(this, Restarter.class);
+//        this.sendBroadcast(mServiceIntent);
+        Log.d("activity", "in on stop ");
         mIsUp = false;
         super.onStop();
     }
 
     @Override
     protected void onPause() {
+        Log.d("activity", "in on pause ");
+
         mIsUp = false;
         super.onPause();
     }
 
     @Override
     protected void onResume() {
+        Log.d("activity", "in on resume ");
+
         mIsUp = true;
         super.onResume();
     }
 
     public void onDestroy() {
-        mServiceIntent = new Intent();
-        mServiceIntent.setAction("restartservice");
-        mServiceIntent.setClass(this, Restarter.class);
-        this.sendBroadcast(mServiceIntent);
-        Log.d("why ", "man");
+
+        Log.d("activity", "in on destroy ");
 
         mIsUp = false;
         super.onDestroy();
@@ -427,6 +499,8 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
     @Override
     public void onBackPressed() {
+        Log.d("activity", "in on stop ");
+
         mIsUp = false;
         moveTaskToBack(true);
     }
@@ -483,14 +557,14 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
 //                        Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
 
-                        boolean isInserted = myDb.insertData(fileName,
-                                "sw",
-                                0,
-                                0);
-                        if(isInserted == true)
-                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
-                        else
-                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+//                        boolean isInserted = myDb.insertData(fileName,
+//                                "sw",
+//                                0,
+//                                0);
+//                        if(isInserted == true)
+//                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
+//                        else
+//                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
 
                     }
                 });

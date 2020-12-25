@@ -23,9 +23,11 @@
 
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -33,6 +35,7 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
@@ -43,6 +46,7 @@ import com.samsung.android.sdk.SsdkUnsupportedException;
 import com.samsung.android.sdk.accessory.SAAgent;
 import com.samsung.android.sdk.accessory.SAPeerAgent;
 import com.samsung.android.sdk.accessory.SASocket;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 import com.samsung.android.sdk.accessoryfiletransfer.SAFileTransfer;
 import com.samsung.android.sdk.accessoryfiletransfer.SAFileTransfer.EventListener;
 import com.samsung.android.sdk.accessoryfiletransfer.SAft;
@@ -73,7 +77,10 @@ public class FileTransferReceiver extends SAAgent {
     private SAFileTransfer mSAFileTransfer = null;
     private EventListener mCallback;
     private FileAction mFileAction = null;
+    DatabaseHelper myDb;
+    private Context mCtxt;
 
+    private static boolean isRunning;
 
     //-----------------------------------------------------
     public int counter=0;
@@ -106,6 +113,8 @@ public class FileTransferReceiver extends SAAgent {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
+
         Log.d("intent", String.valueOf(intent));
         if (intent == null || intent.getAction().equals(String.valueOf( Constants.ACTION.STOPFOREGROUND_ACTION))) {
 
@@ -131,6 +140,18 @@ public class FileTransferReceiver extends SAAgent {
     }
 
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        //create a intent that you want to start again..
+        Intent intent = new Intent(getApplicationContext(), FileTransferReceiver.class);
+        intent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+        PendingIntent pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, SystemClock.elapsedRealtime() + 5000, pendingIntent);
+        super.onTaskRemoved(rootIntent);
+    }
+
+
 //    @Nullable
 //    @Override
 //    public IBinder onBind(Intent intent) {
@@ -147,8 +168,10 @@ public class FileTransferReceiver extends SAAgent {
     @Override
     public void onCreate() {
         super.onCreate();
+        myDb = new DatabaseHelper(this);
+        mCtxt = getApplicationContext();
 
-
+        isRunning = true;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
             startMyOwnForeground();
         else
@@ -170,28 +193,44 @@ public class FileTransferReceiver extends SAAgent {
             public void onTransferCompleted(int transId, String fileName, int errorCode) {
                 Log.d(TAG, "onTransferCompleted: tr id : " + transId + " file name : " + fileName + " error : "
                         + errorCode);
-//                if (errorCode == SAFileTransfer.ERROR_NONE) {
+                if (errorCode != SAFileTransfer.ERROR_NONE) {
+                    boolean isInserted = myDb.insertFileInfo(fileName,
+                            "sw",
+                            0,
+                            0);
+                    if(isInserted == true)
+                        Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
+                    else
+                        Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+
 //                    mFileAction.onFileActionTransferComplete(fileName);
-//                } else {
-//                    mFileAction.onFileActionError();
-//                }
+                }
             }
 
             @Override
-            public void onTransferRequested(int id, String fileName) {
+            public void onTransferRequested(final int id, final String fileName) {
                 Log.d(TAG, "onTransferRequested: id- " + id + " file name: " + fileName);
 
+                Thread thread = new Thread() {
+                    @Override
+                    public void run() {
+                        try {
 
-                String receiveFileName = fileName.substring(fileName.lastIndexOf("/"), fileName.length());
-                receiveFile(id, DEST_DIRECTORY
-                        + receiveFileName, true);
+                            String receiveFileName = fileName.substring(fileName.lastIndexOf("/"), fileName.length());
+                            receiveFile(id, DEST_DIRECTORY
+                                    + receiveFileName, true);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+
+                thread.start();
+
 
 //                if (FileTransferReceiverActivity.isUp()) {
 //                    Log.d(TAG, "Activity is up");
 ////                    mFileAction.onFileActionTransferRequested(id, fileName);
-//                    String receiveFileName = fileName.substring(fileName.lastIndexOf("/"), fileName.length());
-//                    receiveFile(id, DEST_DIRECTORY
-//                            + receiveFileName, true);
 //
 //                } else {
 //                    Log.d(TAG, "Activity is not up, invoke activity");
@@ -248,6 +287,10 @@ public class FileTransferReceiver extends SAAgent {
 
     }
 
+    public static boolean isRunning() {
+        return isRunning;
+    }
+
     @Override
     public IBinder onBind(Intent arg0) {
         return mReceiverBinder;
@@ -255,6 +298,8 @@ public class FileTransferReceiver extends SAAgent {
 
     @Override
     public void onDestroy() {
+        isRunning = false;
+
         try{
             mSAFileTransfer.close();
         }catch (Exception e1) {

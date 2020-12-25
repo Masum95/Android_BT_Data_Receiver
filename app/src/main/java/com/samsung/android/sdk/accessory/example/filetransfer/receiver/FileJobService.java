@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -23,16 +24,26 @@ import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 import com.jacksonandroidnetworking.JacksonParserFactory;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_RCV_ACK_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_UPLOAD_GET_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
 
@@ -52,6 +63,7 @@ public class FileJobService extends JobService {
     private NotificationManagerCompat notificationManager;
     private int download_count = 0;
     private List<List<Integer>> resultList;
+    Intent mServiceIntent;
 
 
     private static List<Integer> convertStringToIntAra(String str){
@@ -105,7 +117,7 @@ public class FileJobService extends JobService {
                             String filePath = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                             // get other required data by changing the constant passed to getColumnIndex
                             Log.d("file_rcvd", filePath);
-                            boolean isInserted = myDb.insertData(filePath,
+                            boolean isInserted = myDb.insertFileInfo(filePath,
                                     "server",
                                     1,
                                     1);
@@ -113,7 +125,6 @@ public class FileJobService extends JobService {
 
                         }
                         Log.d("file_rcvd_here", String.valueOf(status) + " " + String.valueOf(reason));
-
 
                     }
 
@@ -176,16 +187,68 @@ public class FileJobService extends JobService {
 
 
 
+    public class SendFileRecvAck extends AsyncTask<String, String, String> {
+
+        String fileList;
+
+        public SendFileRecvAck(String fileList) {
+            this.fileList = fileList;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            OkHttpClient client = new OkHttpClient();
+
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("file_list", fileList);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+            RequestBody body = RequestBody.create( jsonObject.toString(), JSON); // new
+            Request request = new Request.Builder()
+                    .url(FILE_RCV_ACK_URL) // The URL to send the data to
+                    .post(body)
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+
+                return response.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return "";
+        }
+
+    }
+
+
+
     private class Downloader extends AsyncTask<String, Integer, String> {
 
         @Override
         protected String doInBackground(String... params) {
 
+//            mServiceIntent = new Intent(getApplicationContext(), FileTransferReceiver.class);
+//            mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                getApplicationContext().startForegroundService(mServiceIntent);
+//            } else {
+//                getApplicationContext().startService(mServiceIntent);
+//            }
+
+
             AndroidNetworking.get(FILE_UPLOAD_GET_URL)
 //                        .addPathParameter("pageNumber", "0")
-                    .addQueryParameter("start_time", "2020-11-27T19:58:19")
-                    .addQueryParameter("end_time", "2020-11-27T19:58:19")
-//                        .addQueryParameter("device_id", "3")
+                    .addQueryParameter("selective", "true")
+//                    .addQueryParameter("start_time", "2020-11-28T01:58:19")
+//                    .addQueryParameter("end_time", "2020-11-28T01:58:19")
+                        .addQueryParameter("device_id", "d_1234")
 //                        .addHeaders("token", "1234")
                     .setPriority(Priority.LOW)
                     .build()
@@ -200,6 +263,7 @@ public class FileJobService extends JobService {
                                 resultList = new ArrayList<List<Integer>>();
 
                                 download_count = ara.length();
+                                String recvFileList = "";
                                 for (int i = 0 ; i < ara.length(); i++) {
                                     JSONObject obj = ara.getJSONObject(i);
                                     String down_url = String.valueOf(obj.getString("file"));
@@ -210,12 +274,15 @@ public class FileJobService extends JobService {
                                     DownloadManager.Request request = new DownloadManager.Request(uri);
                                     request.setTitle("CSV File");
                                     request.setDescription("Downloading");
+                                    recvFileList += file_name + ",";
                                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                                     request.setVisibleInDownloadsUi(false);
                                     request.setDestinationUri(Uri.parse("file://" + CSV_FILE_DIR + file_name));
-
+                                    Log.d("download", file_name);
                                     downloadmanager.enqueue(request);
                                 }
+                                Log.d("download", recvFileList);
+                                new SendFileRecvAck(recvFileList).execute();
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -229,6 +296,16 @@ public class FileJobService extends JobService {
                             Log.d("json_response_eror", String.valueOf(error));
                         }
                     });
+
+            if(!(FileTransferReceiver.isRunning())){
+                mServiceIntent = new Intent(getApplicationContext(), FileTransferReceiver.class);
+                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    getApplicationContext().startForegroundService(mServiceIntent);
+                } else {
+                    getApplicationContext().startService(mServiceIntent);
+                }
+            }
             return "hello";
         }
 
@@ -244,4 +321,5 @@ public class FileJobService extends JobService {
         jobCancelled = true;
         return true;
     }
+
 }

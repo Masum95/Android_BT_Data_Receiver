@@ -10,8 +10,12 @@ public interface  Constants {
     String MODEL_FILE_DIR = Environment.getExternalStorageDirectory() + File.separator + PKG_FOLDER_NAME + "model/";
     String DEST_DIRECTORY = CSV_FILE_DIR;
     String MODEL_NAME = "bayesbeat_cpu.pt";
-    String BASE_URL = "https://bayesbeat.herokuapp.com/";
+//    String BASE_URL = "https://bayesbeat.herokuapp.com/";
+    String BASE_URL = "http://192.168.31.61:8000/";
+
     String FILE_UPLOAD_GET_URL = BASE_URL + "file/upload/";
+    String FILE_RCV_ACK_URL = BASE_URL + "file/ack/";
+
     long  SCHEDULER_INTERVAL = 15 * 60 * 1000;
 
     public enum ACTION{
