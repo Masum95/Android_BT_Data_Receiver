@@ -5,17 +5,21 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_SRC_KEYWORD;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_FILE_NAME;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_IS_UPLOADED;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_SRC;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_DEVICE_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_USER_NAME;
+
 /**
  * Created by ProgrammingKnowledge on 4/3/2015.
  */
@@ -31,6 +35,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        getReadableDatabase(); // <-- add this, which triggers onCreate/onUpdate
+
+        Log.d("database", "here in constructor");
     }
 
     // Creating Tables
@@ -38,7 +45,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 
         // create notes table
+        Log.d("database", " here b4 creating file model");
         db.execSQL(FileModel.CREATE_TABLE);
+        Log.d("database", " here after creating file model");
+
+        db.execSQL(ProfileModel.CREATE_TABLE);
+        Log.d("database", " here after creating profile model");
+//        onCreate();
     }
 
     // Upgrading database
@@ -46,6 +59,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop older table if existed
         db.execSQL("DROP TABLE IF EXISTS " + FileModel.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ProfileModel.TABLE_NAME);
 
         // Create tables again
         onCreate(db);
@@ -55,9 +69,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean insertFileInfo(String name, String source, int result_generated, int is_uploaded) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(FileModel.COL_FILE_NAME, name);
-        contentValues.put(FileModel.COL_IS_UPLOADED, is_uploaded);
-        contentValues.put(FileModel.COL_SRC, source);
+        contentValues.put(COL_FILE_NAME, name);
+        contentValues.put(COL_IS_UPLOADED, is_uploaded);
+        contentValues.put(COL_SRC, source);
         contentValues.put(FileModel.COL_RESULT_GEN, result_generated);
 
         long result = db.insert(FileModel.TABLE_NAME, null, contentValues);
@@ -92,10 +106,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 FileModel file = new FileModel();
-                file.setFileName(cursor.getString(cursor.getColumnIndex(FileModel.COL_FILE_NAME)));
-                file.setSrc(cursor.getString(cursor.getColumnIndex(FileModel.COL_SRC)));
+                file.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
+                file.setSrc(cursor.getString(cursor.getColumnIndex(COL_SRC)));
                 file.setUploadedAt(cursor.getString(cursor.getColumnIndex(FileModel.COL_UPLOAD_TIME)));
-                file.setIsUploaded(cursor.getInt(cursor.getColumnIndex(FileModel.COL_IS_UPLOADED)));
+                file.setIsUploaded(cursor.getInt(cursor.getColumnIndex(COL_IS_UPLOADED)));
                 file.setResultGen(cursor.getInt(cursor.getColumnIndex(FileModel.COL_RESULT_GEN)));
 
                 files.add(file);
@@ -108,6 +122,111 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // return notes list
         return files;
     }
+
+    public List<FileModel> getUnuploadedFilePaths(Integer... args) {
+        List<FileModel> files = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + FileModel.TABLE_NAME + " where "+ COL_SRC + " = ?  AND " + COL_IS_UPLOADED + " = 0";
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, new String[] { WATCH_SRC_KEYWORD });
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                FileModel file = new FileModel();
+                file.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
+                file.setSrc(cursor.getString(cursor.getColumnIndex(COL_SRC)));
+                file.setUploadedAt(cursor.getString(cursor.getColumnIndex(FileModel.COL_UPLOAD_TIME)));
+                file.setIsUploaded(cursor.getInt(cursor.getColumnIndex(COL_IS_UPLOADED)));
+                file.setResultGen(cursor.getInt(cursor.getColumnIndex(FileModel.COL_RESULT_GEN)));
+
+                files.add(file);
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return notes list
+        return files;
+    }
+
+    public void updateFileSendStatus(String... args) {
+        String fileName = args[0];
+
+        String updateSql = "UPDATE " + FileModel.TABLE_NAME  + " SET " + COL_IS_UPLOADED + " = 1 WHERE " + COL_FILE_NAME + " = ?";
+
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(updateSql , new String[] { fileName });
+
+        // close db connection
+        db.close();
+
+    }
+
+    private String get_create_command(String table_name, int num_of_cols, String[] cols){
+        int col_len = cols.length;
+        if (col_len != num_of_cols) throw new IllegalArgumentException("Number of cols and column arrays size are not same");
+
+        String str = "INSERT or replace INTO  " + table_name;
+        str += " ( " ;
+        for(int i=0; i<col_len; i++){
+            String col = cols[i];
+            if(i==col_len-1) str += col + " ";
+            else str += col + " , ";
+        }
+        str += " ) ";
+        str += " VALUES( ";
+        for(int i=0; i<col_len; i++){
+            if(i==col_len-1) str += " ? ";
+            else str += " ? , ";
+        }
+        str +=  " )";
+        return str;
+    }
+
+    public void createProfile(String user_name, String device_id) {
+
+        String create_sql = get_create_command( ProfileModel.TABLE_NAME, 2,  new String[]{COL_USER_NAME, COL_DEVICE_ID} );
+        Log.d("database", create_sql);
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(create_sql , new String[] { user_name, device_id });
+
+        // close db connection
+        db.close();
+
+    }
+
+
+    public ProfileModel get_profile() {
+
+//        // get readable database as we are not inserting anything
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(ProfileModel.TABLE_NAME,
+                new String[]{"*"},
+                null,
+                null, null, null, null, null);
+
+        ProfileModel profile = new ProfileModel();
+
+
+        if (cursor.moveToFirst()) {
+                profile.setUserName(cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
+                profile.setDevice_id(cursor.getString(cursor.getColumnIndex(COL_DEVICE_ID)));
+
+        }
+
+        cursor.close();
+
+        return profile;
+
+    }
+
+
 
 
 //    public Note getNote(long id) {

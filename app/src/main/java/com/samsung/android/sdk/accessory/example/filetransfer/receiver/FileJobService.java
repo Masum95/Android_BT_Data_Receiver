@@ -25,18 +25,24 @@ import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 import com.jacksonandroidnetworking.JacksonParserFactory;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Dispatcher;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -49,6 +55,8 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_NAME;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SERVER_SRC_KEYWORD;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_SRC_KEYWORD;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
 
 public class FileJobService extends JobService {
@@ -65,6 +73,13 @@ public class FileJobService extends JobService {
     private List<List<Integer>> resultList;
     Intent mServiceIntent;
 
+    private static String getTimeStampFromFile(String fileName){
+
+        String[] tmp = fileName.split("/");
+        tmp =  tmp[tmp.length-1].split("_");
+        String timestamp =  tmp[tmp.length-1].split("\\.")[0];
+        return timestamp;
+    }
 
     private static List<Integer> convertStringToIntAra(String str){
         String[] result = str.split("[ ,\\]\\[]");
@@ -78,16 +93,18 @@ public class FileJobService extends JobService {
         return list;
     }
 
-
+    String device_id;
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.d(TAG, "Job started");
         AndroidNetworking.initialize(getApplicationContext());  // for api request
         AndroidNetworking.setParserFactory(new JacksonParserFactory());
+
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
         final DatabaseHelper myDb = new DatabaseHelper(this);
+        device_id = myDb.get_profile().getDevice_id();
 
-        mCtxt = getApplicationContext();
+                mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         if (!Python.isStarted()) {
@@ -116,9 +133,13 @@ public class FileJobService extends JobService {
                             // process download
                             String filePath = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                             // get other required data by changing the constant passed to getColumnIndex
+//                            Log.d("file_rcvd", filePath);
+
+                            filePath = (filePath.split(":",2)[1]).substring(2);
+//                            Log.d("filepath", filePath);
                             Log.d("file_rcvd", filePath);
                             boolean isInserted = myDb.insertFileInfo(filePath,
-                                    "server",
+                                    SERVER_SRC_KEYWORD, // SERVER_SRC_KEYWORD
                                     1,
                                     1);
                             new ModelRunner().execute(filePath);
@@ -138,8 +159,8 @@ public class FileJobService extends JobService {
         registerReceiver(receiver, new IntentFilter(
                 DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         new Downloader().execute();
-//        doBackgroundWork(params);
-
+        new Uploader().execute();
+//
         return true;
     }
 
@@ -248,7 +269,7 @@ public class FileJobService extends JobService {
                     .addQueryParameter("selective", "true")
 //                    .addQueryParameter("start_time", "2020-11-28T01:58:19")
 //                    .addQueryParameter("end_time", "2020-11-28T01:58:19")
-                        .addQueryParameter("device_id", "d_1234")
+                        .addQueryParameter("device_id", device_id)
 //                        .addHeaders("token", "1234")
                     .setPriority(Priority.LOW)
                     .build()
@@ -310,6 +331,88 @@ public class FileJobService extends JobService {
         }
 
     }
+
+
+    private class Uploader extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+
+
+            final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
+
+            Log.d("sending", "start here ");
+
+            List<FileModel> filesList  = myDb.getUnuploadedFilePaths();
+            Log.d("sending", String.valueOf(filesList.size()));
+            Dispatcher dispatcher = new Dispatcher();
+            dispatcher.setMaxRequests(1);
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .dispatcher(dispatcher)
+                    .build();
+
+            int indx = 0;
+//            while(true){
+            for(FileModel file_details: filesList){
+                try {
+                    final String path = file_details.getFileName();
+                    Log.d("sending",  path);
+
+                    File file = new File(path);
+                    Log.d("sending", "in try ");
+
+                    RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                            .addFormDataPart("file", file.getName(),
+                                    RequestBody.create(file, MediaType.parse("text/csv") ))
+                            .addFormDataPart("device_id",  device_id)
+                            .addFormDataPart("timestamp", getTimeStampFromFile(path))
+                            .addFormDataPart("file_src", "MOBILE")
+
+                            .build();
+
+                    Request request = new Request.Builder()
+                            .url(FILE_UPLOAD_GET_URL)
+                            .post(requestBody)
+                            .build();
+
+                    client.newCall(request).enqueue(new Callback() {
+
+                        @Override
+                        public void onFailure(final Call call, final IOException e) {
+                            // Handle the error
+                            Log.d("sending", String.valueOf(e));
+
+                        }
+
+                        @Override
+                        public void onResponse(final Call call, final Response response) throws IOException {
+                            if (!response.isSuccessful()) {
+                                // Handle the error
+                                Log.d("sending", "un successful");
+                            }else{
+
+                                Log.d("sending", "successful -------->" +  path);
+                                myDb.updateFileSendStatus(path);
+                            }
+
+
+                            // Upload successful
+                        }
+                    });
+
+                } catch (Exception ex) {
+                    // Handle the error
+                    Log.d("sending", " no file ");
+                }
+            }
+
+            return "ok";
+
+        }
+
+    }
+
 
     private void doBackgroundWork(final JobParameters params) {}
 

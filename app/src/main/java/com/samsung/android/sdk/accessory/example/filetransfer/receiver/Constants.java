@@ -16,6 +16,9 @@ public interface  Constants {
     String FILE_UPLOAD_GET_URL = BASE_URL + "file/upload/";
     String FILE_RCV_ACK_URL = BASE_URL + "file/ack/";
 
+    String SERVER_SRC_KEYWORD = "SERVER";
+    String WATCH_SRC_KEYWORD = "WATCH";
+
     long  SCHEDULER_INTERVAL = 15 * 60 * 1000;
 
     public enum ACTION{

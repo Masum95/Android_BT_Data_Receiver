@@ -64,6 +64,7 @@ import androidx.work.WorkManager;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
@@ -153,33 +154,10 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
 //        if(hasStoragePermission())
 
-        if (!hasPermissions(this, PERMISSIONS)) {
-            requestStoragePermission();
-        }else{
-            Log.d("permisionn  ","----------ase already");
-            new StarterTask().execute();
-
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent intent = new Intent();
-            String packageName = getPackageName();
-            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + packageName));
-                startActivity(intent);
-            }
-        }
 
 
-        String manufacturer = "xiaomi";
-        if(manufacturer.equalsIgnoreCase(android.os.Build.MANUFACTURER)) {
-            //this will open auto start screen where user can enable permission for your app
-            Intent intent = new Intent();
-            intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
-            startActivity(intent);
-        }
+
+
 
 
 
@@ -219,6 +197,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
         Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));
 
+
+        new StarterTask().execute("my string parameter");
+
         adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1,
                 listItems);
@@ -255,8 +236,9 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                     String name = file.getFileName(); // id is column name in db
                     listItems.add("file :" + name);
                 }
+                ProfileModel profile = myDb.get_profile();
 
-
+                Toast.makeText(mCtxt, profile.getUserName() + " " + profile.getDevice_id(), Toast.LENGTH_LONG).show();
 
                 adapter.notifyDataSetChanged();
 
@@ -286,81 +268,16 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             }
         });
 
-//        mServiceIntent = new Intent();
-//        mServiceIntent.setAction("restartservice");
-//        mServiceIntent.setClass(this, Restarter.class);
-//        this.sendBroadcast(mServiceIntent);
+        mServiceIntent = new Intent();
+        mServiceIntent.setAction("restartservice");
+        mServiceIntent.setClass(this, Restarter.class);
+        this.sendBroadcast(mServiceIntent);
         Log.d("why ", "-------------------------------------------------------------man");
 
 //        mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
 //                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    private boolean hasStoragePermission(){
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-            return true;
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-            return true;
-        return false;
-    }
-    int PERMISSION_ALL = 1;
-    String[] PERMISSIONS = {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-//            android.Manifest.permission.WRITE_CONTACTS,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-//            android.Manifest.permission.READ_SMS,
-    };
-
-
-    public static boolean hasPermissions(Context context, String... permissions) {
-        if (context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private void requestStoragePermission() {
-
-        if (hasPermissions(this, PERMISSIONS)) {
-            return;
-        }
-        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-
-        switch (requestCode) {
-            case 1:
-                boolean isPerpermissionForAllGranted = false;
-                if (grantResults.length > 0 && permissions.length == grantResults.length) {
-                    for (int i = 0; i < permissions.length; i++) {
-                        Log.d("tag-->", String.valueOf(permissions[i]) + " " + String.valueOf(grantResults[i]) + " " + PackageManager.PERMISSION_GRANTED);
-
-                        if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                            isPerpermissionForAllGranted = true;
-                        } else {
-                            isPerpermissionForAllGranted = false;
-                        }
-                    }
-
-                    Log.e("value", "Permission Granted, Now you can use local drive .");
-                } else {
-                    isPerpermissionForAllGranted = true;
-                    Log.e("value", "Permission Denied, You cannot use local drive .");
-                }
-                if (isPerpermissionForAllGranted) {
-                    Log.d("tag", "permission granted ");
-                    new StarterTask().execute("my string parameter");
-                }
-                break;
-        }
-    }
 
     private class StarterTask extends AsyncTask<String, Integer, String> {
         @Override
