@@ -93,7 +93,7 @@ public class FileJobService extends JobService {
         return list;
     }
 
-    String device_id;
+    String phone_num;
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.d(TAG, "Job started");
@@ -102,9 +102,9 @@ public class FileJobService extends JobService {
 
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
         final DatabaseHelper myDb = new DatabaseHelper(this);
-        device_id = myDb.get_profile().getDevice_id();
+        phone_num = myDb.get_profile().getPhone_num();
 
-                mCtxt = getApplicationContext();
+        mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         if (!Python.isStarted()) {
@@ -269,7 +269,7 @@ public class FileJobService extends JobService {
                     .addQueryParameter("selective", "true")
 //                    .addQueryParameter("start_time", "2020-11-28T01:58:19")
 //                    .addQueryParameter("end_time", "2020-11-28T01:58:19")
-                        .addQueryParameter("device_id", device_id)
+                        .addQueryParameter("phone_num", phone_num)
 //                        .addHeaders("token", "1234")
                     .setPriority(Priority.LOW)
                     .build()
@@ -365,7 +365,7 @@ public class FileJobService extends JobService {
                     RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                             .addFormDataPart("file", file.getName(),
                                     RequestBody.create(file, MediaType.parse("text/csv") ))
-                            .addFormDataPart("device_id",  device_id)
+                            .addFormDataPart("phone_num",  phone_num)
                             .addFormDataPart("timestamp", getTimeStampFromFile(path))
                             .addFormDataPart("file_src", "MOBILE")
 

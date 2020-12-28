@@ -18,6 +18,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Da
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_IS_UPLOADED;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_SRC;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_DEVICE_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_PHONE_NUM;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_USER_NAME;
 
 /**
@@ -188,14 +189,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return str;
     }
 
-    public void createProfile(String user_name, String device_id) {
+    public void createProfile(String user_name, String phone_num, String device_id) {
 
-        String create_sql = get_create_command( ProfileModel.TABLE_NAME, 2,  new String[]{COL_USER_NAME, COL_DEVICE_ID} );
-        Log.d("database", create_sql);
+//        String create_sql = get_create_command( ProfileModel.TABLE_NAME, 2,  new String[]{COL_USER_NAME, COL_DEVICE_ID} );
+//        Log.d("database", create_sql);
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL(create_sql , new String[] { user_name, device_id });
+//        db.execSQL(create_sql , new String[] { user_name, device_id });
 
         // close db connection
+
+
+        ContentValues values = new ContentValues();
+
+        values.put(COL_USER_NAME, user_name);
+        values.put(COL_PHONE_NUM, phone_num);
+        values.put(COL_DEVICE_ID, device_id);
+        db.insert( ProfileModel.TABLE_NAME, null, values);
         db.close();
 
     }
@@ -217,6 +226,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
                 profile.setUserName(cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
                 profile.setDevice_id(cursor.getString(cursor.getColumnIndex(COL_DEVICE_ID)));
+                profile.setPhone_num(cursor.getString(cursor.getColumnIndex(COL_PHONE_NUM)));
 
         }
 

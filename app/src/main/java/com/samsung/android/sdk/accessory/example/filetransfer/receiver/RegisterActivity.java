@@ -1,11 +1,13 @@
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -22,17 +24,34 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_UPLOAD_GET_URL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.VALID_PHONE_CHK_URL;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    EditText name, device_id, email, phone, password;
+    EditText name, phone_num, email, phone, password;
     Button register;
     TextView login;
-    boolean isNameValid, isDevice_id_Valid, isEmailValid, isPhoneValid, isPasswordValid;
-    TextInputLayout nameError, device_id_error, emailError, phoneError, passError;
+    boolean isNameValid, isEmailValid, isPasswordValid;
+    TextInputLayout nameError, phone_num_error, emailError, phoneError, passError;
     String sharedPrefId = "FileXferAppPreference";
     SharedPreferences prefs;
+    boolean isCheckingFinished = false;
+    boolean isPhoneValid = false;
 
     private void skipActivity(){
         prefs = getSharedPreferences(sharedPrefId, 0);
@@ -41,40 +60,127 @@ public class RegisterActivity extends AppCompatActivity {
         if (isLoggedIn) {
             Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
             startActivity(intent);
+            finish();
         } else {
             final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
 
             name = (EditText) findViewById(R.id.name);
-            device_id = (EditText) findViewById(R.id.device_id);
+            phone_num = (EditText) findViewById(R.id.phone_num);
 
-//        email = (EditText) findViewById(R.id.email);
-//        phone = (EditText) findViewById(R.id.phone);
-//        password = (EditText) findViewById(R.id.password);
-//        login = (TextView) findViewById(R.id.login);
             register = (Button) findViewById(R.id.register);
             nameError = (TextInputLayout) findViewById(R.id.nameError);
-            device_id_error = (TextInputLayout) findViewById(R.id.device_id_error);
-//        emailError = (TextInputLayout) findViewById(R.id.emailError);
-//        phoneError = (TextInputLayout) findViewById(R.id.phoneError);
-//        passError = (TextInputLayout) findViewById(R.id.passError);
+            phone_num_error = (TextInputLayout) findViewById(R.id.phone_num_error);
+
 
             do_permissions_stuffs();
             register.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (is_all_valid()) {
+                    if (is_client_side_valid()) {
                         // redirect to LoginActivity
 
-                        prefs.edit().putBoolean("isLoggedIn", true).apply();
+                        new serverValidation().execute(phone_num.getText().toString());
 
-                        myDb.createProfile(name.getText().toString().trim(), device_id.getText().toString().trim());
-                        Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
-                        startActivity(intent);
                     }
 
                 }
             });
         }
+    }
+
+    private class serverValidation extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            final String phone_num = params[0];
+
+            final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
+
+
+            AndroidNetworking.get(VALID_PHONE_CHK_URL)
+                    .addQueryParameter("phone_num", phone_num)
+                    .setPriority(Priority.LOW)
+                    .build()
+                    .getAsJSONObject(new JSONObjectRequestListener() {
+
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            // do anything with response
+//                            Toast.makeText(getApplicationContext(), String.valueOf(response) , Toast.LENGTH_LONG).show();
+
+                            String status = null;
+                            try {
+                                status = response.getString("status");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+//                            Toast.makeText(getApplicationContext(), status , Toast.LENGTH_LONG).show();
+                            Log.d("json_response", status);
+
+                            String device_id;
+                            if(!status.equalsIgnoreCase("failure")){
+                                try {
+                                    device_id = response.getString("device_id");
+                                    Toast.makeText(getApplicationContext(), device_id , Toast.LENGTH_LONG).show();
+                                    Log.d("json_response", String.valueOf(response));
+                                    prefs.edit().putBoolean("isLoggedIn", true).apply();
+
+                                    myDb.createProfile(name.getText().toString().trim(), phone_num, device_id);
+                                    Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+
+
+
+
+                        }
+
+                        @Override
+                        public void onError(ANError error) {
+                            // handle error
+                            Log.d("json_response_eror", String.valueOf(error));
+                        }
+                    });
+            return "hello";
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+        }
+    }
+
+    public boolean is_client_side_valid() {
+        // Check for a valid name.
+
+        if (name.getText().toString().isEmpty()) {
+            nameError.setError(getResources().getString(R.string.name_error));
+            isNameValid = false;
+        } else {
+            isNameValid = true;
+            nameError.setErrorEnabled(false);
+        }
+
+        if (phone_num.getText().toString().isEmpty()  ) {
+            phone_num_error.setError(getResources().getString(R.string.phone_num_error));
+            isPhoneValid = false;
+        } else {
+            isPhoneValid = true;
+            phone_num_error.setErrorEnabled(false);
+        }
+
+
+        if (isNameValid && isPhoneValid) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -187,66 +293,5 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    public boolean is_all_valid() {
-        // Check for a valid name.
-        if (name.getText().toString().isEmpty()) {
-            nameError.setError(getResources().getString(R.string.name_error));
-            isNameValid = false;
-        } else {
-            isNameValid = true;
-            nameError.setErrorEnabled(false);
-        }
-
-        if (device_id.getText().toString().isEmpty()) {
-            device_id_error.setError(getResources().getString(R.string.device_id_error));
-            isDevice_id_Valid = false;
-        } else {
-            isDevice_id_Valid = true;
-            device_id_error.setErrorEnabled(false);
-        }
-
-//        // Check for a valid email address.
-//        if (email.getText().toString().isEmpty()) {
-//            emailError.setError(getResources().getString(R.string.email_error));
-//            isEmailValid = false;
-//        } else if (!Patterns.EMAIL_ADDRESS.matcher(email.getText().toString()).matches()) {
-//            emailError.setError(getResources().getString(R.string.error_invalid_email));
-//            isEmailValid = false;
-//        } else  {
-//            isEmailValid = true;
-//            emailError.setErrorEnabled(false);
-//        }
-//
-//        // Check for a valid phone number.
-//        if (phone.getText().toString().isEmpty()) {
-//            phoneError.setError(getResources().getString(R.string.phone_error));
-//            isPhoneValid = false;
-//        } else  {
-//            isPhoneValid = true;
-//            phoneError.setErrorEnabled(false);
-//        }
-//
-//        // Check for a valid password.
-//        if (password.getText().toString().isEmpty()) {
-//            passError.setError(getResources().getString(R.string.password_error));
-//            isPasswordValid = false;
-//        } else if (password.getText().length() < 6) {
-//            passError.setError(getResources().getString(R.string.error_invalid_password));
-//            isPasswordValid = false;
-//        } else  {
-//            isPasswordValid = true;
-//            passError.setErrorEnabled(false);
-//        }
-
-        if (isNameValid && isDevice_id_Valid) {
-            return true;
-        }
-
-//        if (isNameValid && isEmailValid && isPhoneValid && isPasswordValid) {
-//            Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_SHORT).show();
-//        }
-
-        return false;
-    }
 
 }

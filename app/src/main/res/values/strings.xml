@@ -14,12 +14,12 @@
     <string name="create_new">Click here for register</string>
     <string name="not_register">Not Register?</string>
     <string name="name">Name</string>
-    <string name="device_id">Device ID</string>
+    <string name="phone_num">Phone Num</string>
 
     <string name="phone_number">Phone Number</string>
     <string name="register">Register</string>
     <string name="name_error">Please enter your name</string>
-    <string name="device_id_error">Please enter valid device id </string>
+    <string name="phone_num_error">Please enter valid phone num </string>
 
     <string name="phone_error">Please enter your phone number</string>
     <string name="email_error">Please enter your email address</string>
