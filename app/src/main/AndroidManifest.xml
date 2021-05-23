@@ -18,6 +18,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 
     <application
         android:name=".NotificationHandler"
@@ -66,11 +67,6 @@
         </activity>
 
 
-
-
-        <service
-            android:name=".ClosingService"
-            android:stopWithTask="false" />
         <service
             android:name=".FileJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />

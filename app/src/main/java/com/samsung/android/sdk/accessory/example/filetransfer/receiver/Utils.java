@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Utils {
 
@@ -29,5 +31,14 @@ public class Utils {
         }
         return null;
     }
+
+    public static String getDateTimeFromTimestamp(String timestampStr){
+        Long timestamp = Long.valueOf(timestampStr).longValue();
+        Date date = new Date(timestamp * 1000L);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy' 'HH:mm:ss:S");
+        return simpleDateFormat.format(date);
+    }
+
 
 }

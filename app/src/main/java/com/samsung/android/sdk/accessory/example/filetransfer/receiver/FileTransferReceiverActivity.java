@@ -65,6 +65,7 @@ import androidx.work.WorkManager;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
@@ -97,10 +98,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     DatabaseHelper myDb;
 
     private ListView listview;
-    private Button Addbutton;
     private Button reloadBtn;
-    //button objects
-    private Button buttonStart;
     private Button buttonStop;
 
 
@@ -152,48 +150,25 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         mCtxt = getApplicationContext();
         myDb = new DatabaseHelper(this);
 
-//        if(hasStoragePermission())
-
-
-
-
-
-
-
-
-//        requestStoragePermission();
-
-//
-//
-//        mServiceIntent = new Intent(FileTransferReceiverActivity.this, FileTransferReceiver.class);
-//        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
-//
-//        startService(mServiceIntent);
-
-//        Intent serviceIntent = new Intent(this, ExampleService.class);
-//        serviceIntent.putExtra("inputExtra", "input text sample");
-//        ContextCompat.startForegroundService(this, serviceIntent);
-
-//        classifier = new Classifier(Utils.assetFilePath(this, "bayesbeat_cpu_codeless.pt"));
-
 
         PACKAGE_NAME = getApplicationContext().getPackageName();
 
 
         listview = (ListView) findViewById(R.id.list);
-
-        List<FileModel> filesList = filesList = myDb.getFiles(5);
-
-
-
-
         listItems = new java.util.ArrayList<String>();
-        listItems.add("List of received files");
-        for(FileModel file: filesList){
-            String name = file.getFileName(); // id is column name in db
-            listItems.add("file :" + name);
-        }
 
+
+
+
+
+        List<ResultModel> resultList  = myDb.getResults(5);
+        listItems.clear();
+        listItems.add("Previous History");
+        for(ResultModel result: resultList){
+            String timestamp = result.getTimestamp(); // id is column name in db
+            String res = result.getResult();
+            listItems.add(timestamp + " <--> " + res);
+        }
 
         Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));
 
@@ -205,56 +180,29 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 listItems);
         listview.setAdapter(adapter);
 
-        Addbutton = (Button) findViewById(R.id.btAddDb);
         reloadBtn = (Button) findViewById(R.id.btReload);
         //getting buttons from xml
-        buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonStop = (Button) findViewById(R.id.buttonStop);
 
-//
-//        mRecvProgressBar = (ProgressBar) findViewById(R.id.RecvProgress);
-//        mRecvProgressBar.setMax(100);
 
-
-
-
-
-        Addbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
 
         reloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<FileModel> filesList = filesList = myDb.getFiles(5);
+                List<ResultModel> resultList  = myDb.getResults(5);
                 listItems.clear();
-                listItems.add("List of received files");
-                for(FileModel file: filesList){
-                    String name = file.getFileName(); // id is column name in db
-                    listItems.add("file :" + name);
+                listItems.add("Previous History");
+                for(ResultModel result: resultList){
+                    String timestamp = result.getTimestamp(); // id is column name in db
+                    String res = result.getResult();
+                    listItems.add(timestamp + " <--> " + res);
                 }
-                ProfileModel profile = myDb.get_profile();
-
-                Toast.makeText(mCtxt, profile.getUserName() + " " + profile.getDevice_id(), Toast.LENGTH_LONG).show();
 
                 adapter.notifyDataSetChanged();
 
             }
         });
 
-        buttonStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
-                if (!isMyServiceRunning(mReceiverService.getClass())) {
-                    startService(mServiceIntent);
-                }
-
-            }
-        });
 
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -272,7 +220,6 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         mServiceIntent.setAction("restartservice");
         mServiceIntent.setClass(this, Restarter.class);
         this.sendBroadcast(mServiceIntent);
-        Log.d("why ", "-------------------------------------------------------------man");
 
 //        mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
 //                this.mServiceConnection, Context.BIND_AUTO_CREATE);
@@ -470,18 +417,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        mRecvProgressBar.setProgress(0);
 
-//                        Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
-
-//                        boolean isInserted = myDb.insertData(fileName,
-//                                "sw",
-//                                0,
-//                                0);
-//                        if(isInserted == true)
-//                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
-//                        else
-//                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
 
                     }
                 });
@@ -513,82 +449,4 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         };
     }
 
-//    private FileAction getFileAction() {
-//        return new FileAction() {
-//            @Override
-//            public void onFileActionError() {
-////                runOnUiThread(new Runnable() {
-////                    @Override
-////                    public void run() {
-//////                        if (mAlert != null && mAlert.isShowing()) {
-//////                            mAlert.dismiss();
-//////                        }
-////                        Toast.makeText(mCtxt, "Transfer cancelled " + "Error", Toast.LENGTH_SHORT).show();
-////
-//////                        mRecvProgressBar.setProgress(0);
-////
-////
-////                    }
-////                });
-//            }
-//
-//            @Override
-//            public void onFileActionProgress(final long progress) {
-////                runOnUiThread(new Runnable() {
-////                    @Override
-////                    public void run() {
-////                        mRecvProgressBar.setProgress((int) progress);
-////                    }
-////                });
-//            }
-//
-//            @Override
-//            public void onFileActionTransferComplete(final String fileName) {
-////                runOnUiThread(new Runnable() {
-////                    @Override
-////                    public void run() {
-////                        mRecvProgressBar.setProgress(0);
-//////                        if (mAlert != null) {
-//////                            mAlert.dismiss();
-//////                        }
-////                        Toast.makeText(mCtxt, "Receive Completed!", Toast.LENGTH_SHORT).show();
-////
-////                        boolean isInserted = myDb.insertData(fileName,
-////                                "sw",
-////                                0,
-////                                0);
-////                        if (isInserted == true)
-////                            Toast.makeText(mCtxt, "Data Inserted", Toast.LENGTH_LONG).show();
-////                        else
-////                            Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
-////
-////                    }
-////                });
-//            }
-//
-//            @Override
-//            public void onFileActionTransferRequested(int id, String path) {
-//                mFilePath = path;
-//                mTransId = id;
-//
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//
-//                        try {
-//                            String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"), mFilePath.length());
-//                            mReceiverService.receiveFile(mTransId, DEST_DIRECTORY
-//                                    + receiveFileName, true);
-//
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                            Toast.makeText(mCtxt, "IllegalArgumentException", Toast.LENGTH_SHORT).show();
-//                        }
-//
-//                    }
-//                });
-//            }
-//        };
-//
-//    }
 }

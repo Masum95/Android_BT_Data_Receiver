@@ -4,7 +4,7 @@ public class FileModel {
     public static final String TABLE_NAME = "files_table";
 
     public static final String COL_ID = "id";
-    public static final String COL_FILE_NAME = "name";
+    public static final String COL_FILE_NAME = "file_name";
     public static final String COL_IS_UPLOADED = "is_uploaded";
     public static final String COL_SRC = "source";
     public static final String COL_UPLOAD_TIME = "uploaded_at";

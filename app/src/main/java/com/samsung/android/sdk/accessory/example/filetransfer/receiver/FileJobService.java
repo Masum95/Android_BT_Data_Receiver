@@ -72,6 +72,9 @@ public class FileJobService extends JobService {
     private int download_count = 0;
     private List<List<Integer>> resultList;
     Intent mServiceIntent;
+    DatabaseHelper myDb;
+    String phone_num;
+
 
     private static String getTimeStampFromFile(String fileName){
 
@@ -93,7 +96,6 @@ public class FileJobService extends JobService {
         return list;
     }
 
-    String phone_num;
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.d(TAG, "Job started");
@@ -101,7 +103,7 @@ public class FileJobService extends JobService {
         AndroidNetworking.setParserFactory(new JacksonParserFactory());
 
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
-        final DatabaseHelper myDb = new DatabaseHelper(this);
+        myDb = new DatabaseHelper(this);
         phone_num = myDb.get_profile().getPhone_num();
 
         mCtxt = getApplicationContext();
@@ -170,16 +172,20 @@ public class FileJobService extends JobService {
         protected String doInBackground(String... params) {
             String csvFileName = params[0];
             Log.d("tag", "before from python " + csvFileName);
-
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");
+
+
             try {
                 PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
                 Log.d("tag", "Result from python " + obj.toString());
+                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName) , obj.toString());
                 resultList.add(convertStringToIntAra(obj.toString()));
                 return obj.toString();
 
             } catch (Exception e) {
+                Log.d("tag", String.valueOf(e));
+
                 return "";
             }
         }
@@ -293,10 +299,12 @@ public class FileJobService extends JobService {
                                     Uri uri = Uri.parse(down_url);
 
                                     DownloadManager.Request request = new DownloadManager.Request(uri);
+                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+
                                     request.setTitle("CSV File");
                                     request.setDescription("Downloading");
                                     recvFileList += file_name + ",";
-                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+//                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                                     request.setVisibleInDownloadsUi(false);
                                     request.setDestinationUri(Uri.parse("file://" + CSV_FILE_DIR + file_name));
                                     Log.d("download", file_name);

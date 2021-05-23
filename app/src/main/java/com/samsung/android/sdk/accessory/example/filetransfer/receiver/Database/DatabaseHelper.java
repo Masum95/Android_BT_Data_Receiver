@@ -9,6 +9,8 @@ import android.util.Log;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Result;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,9 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Da
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_DEVICE_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_PHONE_NUM;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_USER_NAME;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_RESULT;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_TIMESTAMP;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getDateTimeFromTimestamp;
 
 /**
  * Created by ProgrammingKnowledge on 4/3/2015.
@@ -46,12 +51,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 
         // create notes table
-        Log.d("database", " here b4 creating file model");
         db.execSQL(FileModel.CREATE_TABLE);
-        Log.d("database", " here after creating file model");
 
         db.execSQL(ProfileModel.CREATE_TABLE);
-        Log.d("database", " here after creating profile model");
+        db.execSQL(ResultModel.CREATE_TABLE);
+
 //        onCreate();
     }
 
@@ -191,14 +195,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void createProfile(String user_name, String phone_num, String device_id) {
 
-//        String create_sql = get_create_command( ProfileModel.TABLE_NAME, 2,  new String[]{COL_USER_NAME, COL_DEVICE_ID} );
-//        Log.d("database", create_sql);
+
         SQLiteDatabase db = this.getWritableDatabase();
-//        db.execSQL(create_sql , new String[] { user_name, device_id });
-
-        // close db connection
-
-
         ContentValues values = new ContentValues();
 
         values.put(COL_USER_NAME, user_name);
@@ -207,6 +205,58 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert( ProfileModel.TABLE_NAME, null, values);
         db.close();
 
+    }
+
+
+    public void createResult(String file_name, String timestamp, String result) {
+        Log.d("CREATE", file_name);
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_FILE_NAME, file_name);
+        values.put(COL_RESULT, result);
+        values.put(COL_TIMESTAMP, getDateTimeFromTimestamp(timestamp));
+
+        db.insert( ResultModel.TABLE_NAME, null, values);
+        db.close();
+
+    }
+
+    public List<ResultModel> getResults(Integer... args) {
+        int limit = args.length > 0 ? args[0] : 0;
+        List<ResultModel> results = new ArrayList<>();
+
+        // Select All Query
+        String selectQuery = null;
+        if(limit==0){
+            selectQuery = "SELECT  * FROM " + ResultModel.TABLE_NAME + " ORDER BY " +
+                    FileModel.COL_ID + " DESC";
+        }else{
+            selectQuery = "SELECT  * FROM " + ResultModel.TABLE_NAME + " ORDER BY " +
+                    FileModel.COL_ID + "  DESC limit " + limit;
+        }
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                ResultModel result = new ResultModel();
+                result.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
+                result.setResult(cursor.getString(cursor.getColumnIndex(COL_RESULT)));
+                result.setTimestamp(cursor.getString(cursor.getColumnIndex(ResultModel.COL_TIMESTAMP)));
+
+
+                results.add(result);
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return notes list
+        return results;
     }
 
 
