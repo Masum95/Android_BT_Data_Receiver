@@ -14,6 +14,8 @@
     <string name="create_new">Click here for register</string>
     <string name="not_register">Not Register?</string>
     <string name="name">Name</string>
+    <string name="height">Height (in cm)</string>
+    <string name="weight">Weight (in kg) </string>
     <string name="phone_num">Phone Num</string>
 
     <string name="phone_number">Phone Number</string>
@@ -27,5 +29,21 @@
     <string name="password_error">Please enter a password</string>
     <string name="error_invalid_password">Please enter a minimum password of 6 characters</string>
 
+    <string name="radio_male">Male</string>
+    <string name="radio_female">Female</string>
+    <string name="other">Other</string>
+    <string name="select_prompt">Select One</string>
+
+
+    <string-array name="planets_array">
+        <item>Mercury</item>
+        <item>Venus</item>
+        <item>Earth</item>
+        <item>Mars</item>
+        <item>Jupiter</item>
+        <item>Saturn</item>
+        <item>Uranus</item>
+        <item>Neptune</item>
+    </string-array>
 
 </resources>

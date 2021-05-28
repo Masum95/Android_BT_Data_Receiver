@@ -52,10 +52,12 @@
 
 
         <activity
-            android:name=".RegisterActivity"
+            android:name=".ProfileRegisterActivity"
             android:label="FileTransferReceiver"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan|stateHidden"
+
             android:noHistory="true"
 
             android:theme="@style/AppTheme.NoActionBar">
@@ -64,6 +66,22 @@
                 <action android:name="incomingFT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+
+        <activity
+            android:name=".RegisterActivity"
+            android:label="FileTransferReceiver"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:noHistory="true"
+
+            android:theme="@style/AppTheme.NoActionBar">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <action android:name="incomingFT" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
 
 
