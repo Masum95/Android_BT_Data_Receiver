@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -18,11 +20,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Locale;
+import java.util.List;
 
-public class ProfileRegisterActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
+public class ProfileRegisterActivity extends AppCompatActivity  {
 
     EditText name, phone_num, email, phone, password;
 
@@ -30,16 +32,20 @@ public class ProfileRegisterActivity extends AppCompatActivity implements Adapte
     private TextView mDisplayDate;
     private DatePickerDialog.OnDateSetListener mDateSetListener;
     String[] planetArray;
-
-
+    CheckBox ch, ch1, ch2, ch3;
+    RadioGroup rg;
+    Button nextBtn;
+    Spinner spinner;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile_register);
-        addListenerOnButton();
+        nextBtn = (Button) findViewById(R.id.bNext);
+
+
         planetArray = getResources().getStringArray(R.array.planets_array);
-        Log.d("register","here");
-        Spinner spinner = (Spinner) findViewById(R.id.planets_spinner);
+        Log.d("register", "here");
+        spinner = (Spinner) findViewById(R.id.planets_spinner);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.planets_array, android.R.layout.simple_spinner_item);
@@ -47,6 +53,19 @@ public class ProfileRegisterActivity extends AppCompatActivity implements Adapte
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
         spinner.setAdapter(adapter);
+
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                Log.d("Tag---", "clicekd : " + i);
+
+                Toast.makeText(getApplicationContext(), "Selected User: " + planetArray[i], Toast.LENGTH_SHORT).show();
+            }
+
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                return;
+            }
+        });
 
         mDisplayDate = (TextView) findViewById(R.id.tvDate);
 
@@ -62,7 +81,7 @@ public class ProfileRegisterActivity extends AppCompatActivity implements Adapte
                         ProfileRegisterActivity.this,
                         android.R.style.Theme_Holo_Light_Dialog_MinWidth,
                         mDateSetListener,
-                        year,month,day);
+                        year, month, day);
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 dialog.show();
             }
@@ -79,45 +98,71 @@ public class ProfileRegisterActivity extends AppCompatActivity implements Adapte
             }
         };
 
-    }
+        rg = (RadioGroup) findViewById(R.id.radio);
 
-    public void addListenerOnButton() {
 
-        RadioGroup rg = (RadioGroup) findViewById(R.id.radio);
+        // Finding CheckBox by its unique ID
+        ch = (CheckBox) findViewById(R.id.checkBox);
+        ch1 = (CheckBox) findViewById(R.id.checkBox2);
+        ch2 = (CheckBox) findViewById(R.id.checkBox3);
+        ch3 = (CheckBox) findViewById(R.id.checkBox4);
 
-        rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
-        {
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch(checkedId){
-                    case R.id.radioMale:
-                        Toast.makeText(getApplicationContext(), "Male",Toast.LENGTH_SHORT).show();
+        nextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<String> checkedList = getCheckedList();
+                String selectedRadio = getSelectedRadioItem();
+                String selectedDropDown = getSelectedDropDown();
 
-                        break;
-                    case R.id.radioFemale:
-                        // do operations specific to this selection
-                        break;
-                    case R.id.radioOther:
-                        // do operations specific to this selection
-                        break;
-                }
+                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
+
+//                Toast.makeText(getApplicationContext(), selectedRadio, Toast.LENGTH_SHORT).show();
             }
         });
+    }
 
+
+    public List<String> getCheckedList() {
+        String msg = "";
+        List<String> checkedList = new ArrayList<>();
+
+
+        if (ch.isChecked()) {
+            checkedList.add(ch.getText().toString());
+            msg += ch.getText().toString();
+
+        }
+        if (ch1.isChecked())
+            checkedList.add(ch1.getText().toString());
+        if (ch2.isChecked())
+            checkedList.add(ch2.getText().toString());
+        if (ch3.isChecked())
+            checkedList.add(ch3.getText().toString());
+
+        return checkedList;
     }
-    @Override
-    public void onItemSelected(AdapterView<?> arg0, View arg1, int position,long id) {
-        Toast.makeText(getApplicationContext(), "Selected User: "+ planetArray[position] ,Toast.LENGTH_SHORT).show();
+
+
+    private String getSelectedDropDown() {
+
+        String text = spinner.getSelectedItem().toString();
+        return text;
     }
-    @Override
-    public void onNothingSelected(AdapterView<?> arg0) {
-        // TODO - Custom Code
+
+    private String getSelectedRadioItem() {
+
+        int selectedId = rg.getCheckedRadioButtonId();
+
+        RadioButton radioButton;
+        radioButton = (RadioButton) findViewById(selectedId);
+        return radioButton.getText().toString();
     }
+
 
     @Override
     protected void onStart() {
         super.onStart();
     }
-
 
 
 }
