@@ -73,7 +73,7 @@ public class FileJobService extends JobService {
     private List<List<Integer>> resultList;
     Intent mServiceIntent;
     DatabaseHelper myDb;
-    String phone_num;
+    String phone_num, regi_id;
 
 
     private static String getTimeStampFromFile(String fileName){
@@ -105,7 +105,7 @@ public class FileJobService extends JobService {
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
         myDb = new DatabaseHelper(this);
         phone_num = myDb.get_profile().getPhone_num();
-
+        regi_id = myDb.get_profile().getRegi_id();
         mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
@@ -275,7 +275,7 @@ public class FileJobService extends JobService {
                     .addQueryParameter("selective", "true")
 //                    .addQueryParameter("start_time", "2020-11-28T01:58:19")
 //                    .addQueryParameter("end_time", "2020-11-28T01:58:19")
-                        .addQueryParameter("phone_num", phone_num)
+                        .addQueryParameter("registration_id", regi_id)
 //                        .addHeaders("token", "1234")
                     .setPriority(Priority.LOW)
                     .build()
@@ -359,7 +359,7 @@ public class FileJobService extends JobService {
             OkHttpClient client = new OkHttpClient.Builder()
                     .dispatcher(dispatcher)
                     .build();
-
+            String device_id = myDb.get_profile().getDevice_id();
             int indx = 0;
 //            while(true){
             for(FileModel file_details: filesList){
@@ -373,7 +373,7 @@ public class FileJobService extends JobService {
                     RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                             .addFormDataPart("file", file.getName(),
                                     RequestBody.create(file, MediaType.parse("text/csv") ))
-                            .addFormDataPart("phone_num",  phone_num)
+                            .addFormDataPart("device_id",  device_id)
                             .addFormDataPart("timestamp", getTimeStampFromFile(path))
                             .addFormDataPart("file_src", "MOBILE")
 

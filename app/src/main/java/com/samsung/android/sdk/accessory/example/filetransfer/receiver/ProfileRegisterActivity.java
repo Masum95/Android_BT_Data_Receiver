@@ -2,8 +2,10 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -20,35 +22,56 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
+
 public class ProfileRegisterActivity extends AppCompatActivity  {
 
-    EditText name, phone_num, email, phone, password;
 
 
     private TextView mDisplayDate;
     private DatePickerDialog.OnDateSetListener mDateSetListener;
-    String[] planetArray;
+    String[] bloodArray;
     CheckBox ch, ch1, ch2, ch3;
     RadioGroup rg;
     Button nextBtn;
     Spinner spinner;
+
+    EditText heightText, weightText;
+    String dob;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile_register);
         nextBtn = (Button) findViewById(R.id.bNext);
 
+        heightText = (EditText) findViewById(R.id.height);
+        weightText = (EditText) findViewById(R.id.weight);
 
-        planetArray = getResources().getStringArray(R.array.planets_array);
+        bloodArray = getResources().getStringArray(R.array.blood_groups);
         Log.d("register", "here");
-        spinner = (Spinner) findViewById(R.id.planets_spinner);
+        spinner = (Spinner) findViewById(R.id.blood_spinner);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.planets_array, android.R.layout.simple_spinner_item);
+                R.array.blood_groups, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
@@ -59,7 +82,7 @@ public class ProfileRegisterActivity extends AppCompatActivity  {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 Log.d("Tag---", "clicekd : " + i);
 
-                Toast.makeText(getApplicationContext(), "Selected User: " + planetArray[i], Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Selected User: " + bloodArray[i], Toast.LENGTH_SHORT).show();
             }
 
             public void onNothingSelected(AdapterView<?> adapterView) {
@@ -91,14 +114,14 @@ public class ProfileRegisterActivity extends AppCompatActivity  {
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 month = month + 1;
-                Log.d("tag", "onDateSet: mm/dd/yyy: " + month + "/" + day + "/" + year);
+                Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-"+day);
 
-                String date = month + "/" + day + "/" + year;
+                String date = year + "-" + month + "-"+day;
                 mDisplayDate.setText(date);
             }
         };
 
-        rg = (RadioGroup) findViewById(R.id.radio);
+        rg = (RadioGroup) findViewById(R.id.genderRadio);
 
 
         // Finding CheckBox by its unique ID
@@ -110,11 +133,9 @@ public class ProfileRegisterActivity extends AppCompatActivity  {
         nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<String> checkedList = getCheckedList();
-                String selectedRadio = getSelectedRadioItem();
-                String selectedDropDown = getSelectedDropDown();
 
-                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
+
+                new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
 
 //                Toast.makeText(getApplicationContext(), selectedRadio, Toast.LENGTH_SHORT).show();
             }
@@ -143,19 +164,99 @@ public class ProfileRegisterActivity extends AppCompatActivity  {
     }
 
 
-    private String getSelectedDropDown() {
+    private String getBG() {
 
         String text = spinner.getSelectedItem().toString();
         return text;
     }
 
-    private String getSelectedRadioItem() {
-
+    private String getGender() {
         int selectedId = rg.getCheckedRadioButtonId();
 
         RadioButton radioButton;
         radioButton = (RadioButton) findViewById(selectedId);
         return radioButton.getText().toString();
+    }
+
+    private class submitValues extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
+            String regi_id = myDb.get_profile().getRegi_id();
+            OkHttpClient client = new OkHttpClient();
+            String gender = getGender();
+            String blood_group = getBG();
+//                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
+
+            String dob =  mDisplayDate.getText().toString();
+            String height = heightText.getText().toString();
+            String weight = weightText.getText().toString();
+
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("gender", gender);
+                jsonObject.put("blood_group", blood_group);
+                jsonObject.put("height", height);
+                jsonObject.put("registration_id", regi_id);
+                jsonObject.put("weight",  weight);
+                jsonObject.put("dob", dob);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d("tag=======", jsonObject.toString());
+            Log.d("tag=======", myDb.get_profile().toString());
+            Log.d("tag=======", regi_id);
+
+
+
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+            RequestBody body = RequestBody.create( jsonObject.toString(), JSON); // new
+            Log.d("tag=======", String.valueOf(body));
+
+            Request request = new Request.Builder().url(MEDICAL_PROFILE_URL) // The URL to send the data to
+                    .post(body)
+                    .build();
+            Log.d("tag=======", String.valueOf(request));
+
+
+
+
+            client.newCall(request).enqueue(new Callback() {
+
+                @Override
+                public void onFailure(final Call call, final IOException e) {
+                    // Handle the error
+                    Log.d("sending", String.valueOf(e));
+
+                }
+
+                @Override
+                public void onResponse(final Call call, final Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        // Handle the error
+                        Log.d("sending", "un successful");
+                    }else{
+                        Log.d("sending", " successful");
+                        Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+
+
+                    // Upload successful
+                }
+            });
+            return "hello";
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+        }
     }
 
 

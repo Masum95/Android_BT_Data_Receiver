@@ -11,11 +11,12 @@ public interface  Constants {
     String DEST_DIRECTORY = CSV_FILE_DIR;
     String MODEL_NAME = "bayesbeat_cpu.pt";
 //    String BASE_URL = "https://bayesbeat.herokuapp.com/";
-    String BASE_URL = "http://192.168.31.61:8000/";
+    String BASE_URL = "http://192.168.31.62:8000/";
 
     String FILE_UPLOAD_GET_URL = BASE_URL + "file/upload/";
     String FILE_RCV_ACK_URL = BASE_URL + "file/ack/";
-    String VALID_PHONE_CHK_URL = BASE_URL + "file/isValidPhone/";
+    String WATCH_ID_URL = BASE_URL + "file/watch_id/";
+    String MEDICAL_PROFILE_URL = BASE_URL + "file/medical_profile/";
 
     String SERVER_SRC_KEYWORD = "SERVER";
     String WATCH_SRC_KEYWORD = "WATCH";

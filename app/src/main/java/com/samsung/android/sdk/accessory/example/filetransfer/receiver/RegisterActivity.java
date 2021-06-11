@@ -39,7 +39,7 @@ import java.util.List;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_UPLOAD_GET_URL;
-import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.VALID_PHONE_CHK_URL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_ID_URL;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -61,7 +61,7 @@ public class RegisterActivity extends AppCompatActivity {
             Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
             startActivity(intent);
             finish();
-        } else {
+        } else{
             final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
 
             name = (EditText) findViewById(R.id.name);
@@ -79,7 +79,7 @@ public class RegisterActivity extends AppCompatActivity {
                     if (is_client_side_valid()) {
                         // redirect to LoginActivity
 
-                        new serverValidation().execute(phone_num.getText().toString());
+                        new serverValidation().execute();
 
                     }
 
@@ -92,13 +92,14 @@ public class RegisterActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-            final String phone_num = params[0];
+
 
             final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
 
 
-            AndroidNetworking.get(VALID_PHONE_CHK_URL)
-                    .addQueryParameter("phone_num", phone_num)
+            AndroidNetworking.get(WATCH_ID_URL)
+                    .addQueryParameter("phone_num", phone_num.getText().toString())
+                    .addQueryParameter("user_name",  name.getText().toString().trim())
                     .setPriority(Priority.LOW)
                     .build()
                     .getAsJSONObject(new JSONObjectRequestListener() {
@@ -117,16 +118,17 @@ public class RegisterActivity extends AppCompatActivity {
 //                            Toast.makeText(getApplicationContext(), status , Toast.LENGTH_LONG).show();
                             Log.d("json_response", status);
 
-                            String device_id;
+                            String device_id, regi_id;
                             if(!status.equalsIgnoreCase("failure")){
                                 try {
                                     device_id = response.getString("device_id");
+                                    regi_id = response.getString("registration_id");
                                     Toast.makeText(getApplicationContext(), device_id , Toast.LENGTH_LONG).show();
                                     Log.d("json_response", String.valueOf(response));
                                     prefs.edit().putBoolean("isLoggedIn", true).apply();
 
-                                    myDb.createProfile(name.getText().toString().trim(), phone_num, device_id);
-                                    Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
+                                    myDb.createProfile(name.getText().toString().trim(), phone_num.getText().toString(), device_id, regi_id);
+                                    Intent intent = new Intent(getApplicationContext(), ProfileRegisterActivity.class);
                                     startActivity(intent);
                                     finish();
                                 } catch (JSONException e) {

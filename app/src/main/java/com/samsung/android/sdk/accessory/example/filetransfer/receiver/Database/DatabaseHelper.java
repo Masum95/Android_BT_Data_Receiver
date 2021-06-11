@@ -21,6 +21,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Da
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_SRC;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_DEVICE_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_PHONE_NUM;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_REGI_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_USER_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_RESULT;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_TIMESTAMP;
@@ -36,7 +37,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
     // Database Name
-    private static final String DATABASE_NAME = "BAYES_BEAT";
+    private static final String DATABASE_NAME = "BAYES_BEAT.db";
 
 
     public DatabaseHelper(Context context) {
@@ -55,7 +56,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.execSQL(ProfileModel.CREATE_TABLE);
         db.execSQL(ResultModel.CREATE_TABLE);
-
+        Log.d("tag=======", "here in creation ");
 //        onCreate();
     }
 
@@ -193,15 +194,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return str;
     }
 
-    public void createProfile(String user_name, String phone_num, String device_id) {
+    public void createProfile(String user_name, String phone_num, String device_id, String regi_id) {
 
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
+        Log.d("tag=======", user_name +  phone_num +  device_id +  regi_id);
 
         values.put(COL_USER_NAME, user_name);
         values.put(COL_PHONE_NUM, phone_num);
         values.put(COL_DEVICE_ID, device_id);
+        values.put(COL_REGI_ID, regi_id);
+        Log.d("tag=======", values.toString());
+
         db.insert( ProfileModel.TABLE_NAME, null, values);
         db.close();
 
@@ -269,14 +274,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 new String[]{"*"},
                 null,
                 null, null, null, null, null);
+        Log.d("tag=======", "ekhane ashse");
 
         ProfileModel profile = new ProfileModel();
+        if (cursor != null){
+            Log.d("tag=======", "null pay nai ");
 
+        }else{
+            Log.d("tag=======", "Null paise ");
+
+        }
 
         if (cursor.moveToFirst()) {
+                Log.d("tag=======", cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
+
                 profile.setUserName(cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
                 profile.setDevice_id(cursor.getString(cursor.getColumnIndex(COL_DEVICE_ID)));
                 profile.setPhone_num(cursor.getString(cursor.getColumnIndex(COL_PHONE_NUM)));
+                profile.setRegi_id(cursor.getString(cursor.getColumnIndex(COL_REGI_ID)));
 
         }
 
