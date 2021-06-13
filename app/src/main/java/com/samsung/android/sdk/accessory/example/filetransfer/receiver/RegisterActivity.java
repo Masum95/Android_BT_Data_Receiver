@@ -58,7 +58,7 @@ public class RegisterActivity extends AppCompatActivity {
         boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
 
         if (isLoggedIn) {
-            Intent intent = new Intent(getApplicationContext(), FileTransferReceiverActivity.class);
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
             finish();
         } else{
@@ -128,7 +128,7 @@ public class RegisterActivity extends AppCompatActivity {
                                     prefs.edit().putBoolean("isLoggedIn", true).apply();
 
                                     myDb.createProfile(name.getText().toString().trim(), phone_num.getText().toString(), device_id, regi_id);
-                                    Intent intent = new Intent(getApplicationContext(), ProfileRegisterActivity.class);
+                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                     startActivity(intent);
                                     finish();
                                 } catch (JSONException e) {

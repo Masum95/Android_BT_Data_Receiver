@@ -1,28 +1,5 @@
-/*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd. All rights reserved.
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
- * the following conditions are met:
- *
- *     * Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright notice,
- *       this list of conditions and the following disclaimer in the documentation and/or
- *       other materials provided with the distribution.
- *     * Neither the name of Samsung Electronics Co., Ltd. nor the names of its contributors may be used to endorse
- *       or promote products derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
@@ -32,26 +9,21 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.PowerManager;
-import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -59,33 +31,35 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
-import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
-import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
-import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.FileAction;
-
-import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileTransferReceiver.ReceiverBinder;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import java.io.IOException;
 import java.util.List;
 
-
-import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 
-public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> extends AppCompatActivity {
-    private static final String TAG = "FileTransferReceiverActivity";
+
+public class FileTransferReceiverFragment extends Fragment {
+    Context thisContext;
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        thisContext = container.getContext();
+
+        return inflater.inflate(R.layout.ft_receiver_activity, container, false);
+    }
+
+
+    private static final String TAG = "MessageFragment";
     private static final int STORAGE_PERMISSION_CODE = 1;
     private static boolean mIsUp = false;
     private int mTransId;
@@ -134,27 +108,26 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         @Override
         public void onServiceConnected(ComponentName arg0, IBinder binder) {
             Log.d(TAG, "Service connected");
-            mReceiverService = ((ReceiverBinder) binder).getService();
+            mReceiverService = ((FileTransferReceiver.ReceiverBinder) binder).getService();
             mReceiverService.registerFileAction(getFileAction());
-            mServiceIntent = new Intent(FileTransferReceiverActivity.this, mReceiverService.getClass());
+            mServiceIntent = new Intent(thisContext, mReceiverService.getClass());
 
         }
     };
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ft_receiver_activity);
 
         mIsUp = true;
-        mCtxt = getApplicationContext();
-        myDb = new DatabaseHelper(this);
+        mCtxt = thisContext;
+        myDb = new DatabaseHelper(thisContext);
 
 
-        PACKAGE_NAME = getApplicationContext().getPackageName();
+        PACKAGE_NAME = thisContext.getPackageName();
 
 
-        listview = (ListView) findViewById(R.id.list);
+        listview = (ListView) getView().findViewById(R.id.list);
         listItems = new java.util.ArrayList<String>();
 
 
@@ -173,16 +146,16 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
         Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));
 
 
-        new StarterTask().execute("my string parameter");
+        new FileTransferReceiverFragment.StarterTask().execute("my string parameter");
 
-        adapter = new ArrayAdapter<String>(this,
+        adapter = new ArrayAdapter<String>(thisContext,
                 android.R.layout.simple_list_item_1,
                 listItems);
         listview.setAdapter(adapter);
 
-        reloadBtn = (Button) findViewById(R.id.btReload);
+        reloadBtn = (Button) getView().findViewById(R.id.btReload);
         //getting buttons from xml
-        buttonStop = (Button) findViewById(R.id.buttonStop);
+        buttonStop = (Button) getView().findViewById(R.id.buttonStop);
 
 
 
@@ -210,7 +183,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
                 if (isMyServiceRunning(mReceiverService.getClass())) {
 
-                    startService(mServiceIntent);
+                    getActivity().startService(mServiceIntent);
 
                 }
             }
@@ -218,10 +191,10 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
         mServiceIntent = new Intent();
         mServiceIntent.setAction("restartservice");
-        mServiceIntent.setClass(this, Restarter.class);
-        this.sendBroadcast(mServiceIntent);
+        mServiceIntent.setClass(thisContext, Restarter.class);
+        thisContext.sendBroadcast(mServiceIntent);
 
-//        mCtxt.bindService(new Intent(getApplicationContext(), FileTransferReceiver.class),
+//        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
 //                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -247,7 +220,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             }
             if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
                 Toast.makeText(mCtxt, " No SDCARD Present", Toast.LENGTH_SHORT).show();
-                finish();
+//                finish();
             } else {
 
             }
@@ -258,7 +231,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
 
             String modelName = "bayesbeat_cpu.pt";
-            AssetManager am = getAssets();
+            AssetManager am = getActivity().getAssets();
             InputStream inputStream = null;
             try {
                 inputStream = am.open(modelName);
@@ -290,7 +263,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                     .setPersisted(true)
                     .setPeriodic( SCHEDULER_INTERVAL)
                     .build();
-            JobScheduler scheduler = (JobScheduler) getSystemService( JOB_SCHEDULER_SERVICE);
+            JobScheduler scheduler = (JobScheduler) getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
             int resultCode = scheduler.schedule(info);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
                 Log.d("tag", "Job scheduled");
@@ -304,7 +277,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             Log.d("list----", String.valueOf(service.service));
             if (serviceClass.getName().equals(service.service.getClassName())) {
@@ -318,7 +291,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         Log.d("activity", "in on start ");
 
         mIsUp = true;
@@ -326,7 +299,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
 //        mServiceIntent = new Intent();
 //        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
 //        mServiceIntent.setClass(this, Restarter.class);
@@ -337,7 +310,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         Log.d("activity", "in on pause ");
 
         mIsUp = false;
@@ -345,7 +318,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         Log.d("activity", "in on resume ");
 
         mIsUp = true;
@@ -361,23 +334,23 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
     }
 
-    @Override
+//    @Override
     public void onBackPressed() {
         Log.d("activity", "in on stop ");
 
         mIsUp = false;
-        moveTaskToBack(true);
+        getActivity().moveTaskToBack(true);
     }
 
     // for Android before 2.0, just in case
-    @Override
+//    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             mIsUp = false;
-            moveTaskToBack(true);
+            getActivity().moveTaskToBack(true);
             return true;
         }
-        return super.onKeyDown(keyCode, event);
+        return super.getActivity().onKeyDown(keyCode, event);
     }
 
     public static boolean isUp() {
@@ -385,11 +358,11 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
     }
 
 
-    private FileAction getFileAction() {
-        return new FileAction() {
+    private FileTransferReceiver.FileAction getFileAction() {
+        return new FileTransferReceiver.FileAction() {
             @Override
             public void onFileActionError() {
-                runOnUiThread(new Runnable() {
+                getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
@@ -414,7 +387,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
             @Override
             public void onFileActionTransferComplete(final String fileName) {
-                runOnUiThread(new Runnable() {
+                getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
@@ -428,7 +401,7 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
                 mFilePath = path;
                 mTransId = id;
 
-                runOnUiThread(new Runnable() {
+                getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
@@ -448,5 +421,5 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
             }
         };
     }
-
+    
 }

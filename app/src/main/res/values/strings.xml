@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">FileTransferReceiver</string>
+    <string name="app_name">BayesBeat</string>
     <string name="recv_status">Recv Status</string>
     <string name="recv_progress">Recv Progress</string>
     <string name="title_activity_main">MainActivity</string>

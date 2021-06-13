@@ -10,6 +10,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -231,36 +233,32 @@ public class MedicalProfileRegisterFragment extends Fragment {
                     .post(body)
                     .build();
             Log.d("tag=======", String.valueOf(request));
-            Intent intent = new Intent(thisContext, FileTransferReceiverActivity.class);
-            startActivity(intent);
 
 
+            client.newCall(request).enqueue(new Callback() {
 
-//            client.newCall(request).enqueue(new Callback() {
-//
-//                @Override
-//                public void onFailure(final Call call, final IOException e) {
-//                    // Handle the error
-//                    Log.d("sending", String.valueOf(e));
-//
-//                }
-//
-//                @Override
-//                public void onResponse(final Call call, final Response response) throws IOException {
-//                    if (!response.isSuccessful()) {
-//                        // Handle the error
-//                        Log.d("sending", "un successful");
-//                    }else{
-//                        Log.d("sending", " successful");
-//                        Intent intent = new Intent(thisContext, FileTransferReceiverActivity.class);
-//                        startActivity(intent);
-////                        finish();
-//                    }
-//
-//
-//                    // Upload successful
-//                }
-//            });
+                @Override
+                public void onFailure(final Call call, final IOException e) {
+                    // Handle the error
+                    Log.d("sending", String.valueOf(e));
+
+                }
+
+                @Override
+                public void onResponse(final Call call, final Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        // Handle the error
+                        Log.d("sending", "un successful");
+                    }else{
+                        Log.d("sending", " successful");
+                        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                                new FileTransferReceiverFragment()).commit();
+                    }
+
+
+                    // Upload successful
+                }
+            });
             return "hello";
         }
 
