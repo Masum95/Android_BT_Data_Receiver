@@ -22,8 +22,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginTop="120dp"
+            android:layout_marginRight="24dp"
             android:orientation="vertical">
 
             <LinearLayout
@@ -340,5 +341,43 @@
             </RelativeLayout>
         </LinearLayout>
     </ScrollView>
+
+    <TextView
+        android:id="@+id/profileText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:text="Profile"
+        android:textColor="#9C27B0"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView19"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Step (2/2)"
+        android:textColor="#9C27B0"
+        app:layout_constraintStart_toStartOf="@+id/profileText2"
+        app:layout_constraintTop_toBottomOf="@+id/profileText2" />
+
+    <ProgressBar
+        android:id="@+id/progressBar4"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="180dp"
+        android:layout_marginTop="8dp"
+        android:max="100"
+        android:progress="50"
+        android:progressBackgroundTint="#9C27B0"
+        android:progressTint="#9C27B0"
+        android:scaleX="7.5"
+        app:layout_constraintStart_toStartOf="@+id/scrollView3"
+        app:layout_constraintTop_toBottomOf="@+id/textView19" />
 
 </android.support.constraint.ConstraintLayout>
