@@ -4,29 +4,29 @@
     tools:showIn="navigation_view">
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_message"
-            android:icon="@drawable/ic_medicine"
-            android:title="Message" />
+            android:id="@+id/profile_registration"
+            android:icon="@drawable/ic_baseline_person_outline_24"
+            android:title="Profile Registration" />
         <item
-            android:id="@+id/nav_chat"
-            android:icon="@drawable/ic_medicine"
-            android:title="Chat" />
-        <item
-            android:id="@+id/nav_profile"
-            android:icon="@drawable/ic_medicine"
-            android:title="Profile" />
+            android:id="@+id/dashboard"
+            android:icon="@drawable/ic_dashboard_foreground"
+            android:title="Dashboard" />
+<!--        <item-->
+<!--            android:id="@+id/nav_profile"-->
+<!--            android:icon="@drawable/ic_medicine"-->
+<!--            android:title="Profile" />-->
     </group>
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_medicine"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_medicine"
-                android:title="Send" />
-        </menu>
-    </item>
+<!--    <item android:title="Communicate">-->
+<!--        <menu>-->
+<!--            <item-->
+<!--                android:id="@+id/nav_share"-->
+<!--                android:icon="@drawable/ic_medicine"-->
+<!--                android:title="Share" />-->
+<!--            <item-->
+<!--                android:id="@+id/nav_send"-->
+<!--                android:icon="@drawable/ic_medicine"-->
+<!--                android:title="Send" />-->
+<!--        </menu>-->
+<!--    </item>-->
 </menu>
 

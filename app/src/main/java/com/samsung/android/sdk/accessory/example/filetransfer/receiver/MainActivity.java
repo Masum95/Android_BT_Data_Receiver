@@ -35,27 +35,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     new FileTransferReceiverFragment()).commit();
-            navigationView.setCheckedItem(R.id.nav_message);
+            navigationView.setCheckedItem(R.id.profile_registration);
         }
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.nav_message:
+            case R.id.profile_registration:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                        new MedicalProfileRegisterFragment1()).commit();
+                break;
+            case R.id.dashboard:
+
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new FileTransferReceiverFragment()).commit();
+
                 break;
-            case R.id.nav_chat:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                        new MedicalProfileRegisterFragment()).commit();
-                break;
-            case R.id.nav_share:
-                Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.nav_send:
-                Toast.makeText(this, "Send", Toast.LENGTH_SHORT).show();
-                break;
+
         }
 
         drawer.closeDrawer(GravityCompat.START);
