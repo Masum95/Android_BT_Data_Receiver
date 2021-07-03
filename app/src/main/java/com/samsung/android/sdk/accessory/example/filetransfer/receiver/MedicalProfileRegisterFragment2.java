@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -56,7 +57,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
     private DatePickerDialog.OnDateSetListener mDateSetListener;
     String[] bloodArray;
 
-    Button nextBtn;
+    Button submitBtn;
     Spinner spinner;
 
     EditText heightText, weightText;
@@ -84,19 +85,18 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        nextBtn = (Button) getView().findViewById(R.id.bNext);
+        submitBtn = (Button) getView().findViewById(R.id.buttonSubmit);
 
         heightText = (EditText) getView().findViewById(R.id.height);
         weightText = (EditText) getView().findViewById(R.id.weight);
 
-        bloodArray = getResources().getStringArray(R.array.blood_groups);
         Log.d("register", "here");
 
         setRadioTextToButtonMapping();
 
+        new loadValues().execute();
 
-
-        nextBtn.setOnClickListener(new View.OnClickListener() {
+        submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -124,22 +124,45 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
     }
     private void setRadioValue(String key, String value){
         int grpId = radioTextToButtonMapping.get(key);
-        int buttonIndx = getRadioButtonIndexByText(value);
 
-
+        int buttonIndx = -1;
+        switch (key){
+            case "has_eating_outside":
+                buttonIndx = getEatingOutsideRadioButtonIndexByText(value);
+                break;
+            default:
+                buttonIndx = getBinaryRadioButtonIndexByText(value);
+                break;
+        }
+        if(buttonIndx == -1) return;
+        Log.d("setting", key +"    "+ buttonIndx);
         RadioGroup rg;
         rg = (RadioGroup) getView().findViewById(grpId);
         rg.check(rg.getChildAt(buttonIndx).getId());
     }
 
-    private int getRadioButtonIndexByText(String str){
+    private int getBinaryRadioButtonIndexByText(String str){
+
         switch (str){
-            case "True":
+            case "Yes":
                 return 0;
-            case "False":
+            case "No":
                 return 1;
         }
-        return 0;
+        return -1;
+    }
+
+    private int getEatingOutsideRadioButtonIndexByText(String str){
+
+        switch (str){
+            case "Frequently":
+                return 0;
+            case "Sometimes":
+                return 1;
+            case "Never":
+                return 2;
+        }
+        return -1;
     }
 
     private class loadValues extends AsyncTask<String, Integer, String> {
@@ -177,15 +200,20 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
 
                         String jsonData = response.body().string();
                         try {
-                            JSONObject Jobject = new JSONObject(jsonData);
+                            JSONObject json = new JSONObject(jsonData);
 
+                            JSONArray jsonarray = new JSONArray(json.getString("data"));
+                            if(jsonarray.length() > 0){
+                                JSONObject Jobject = (JSONObject) jsonarray.getJSONObject(0);
 
-                            setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
-                            setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
-                            setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
-                            setRadioValue("has_covid", Jobject.getString("has_covid"));
-                            setRadioValue("has_smoking", Jobject.getString("has_smoking"));
-                            setRadioValue("has_eating_outside", Jobject.getString("has_eating_outside"));
+                                setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
+                                setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
+                                setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
+                                setRadioValue("has_covid", Jobject.getString("has_covid"));
+                                setRadioValue("has_smoking", Jobject.getString("has_smoking"));
+                                setRadioValue("has_eating_outside", Jobject.getString("has_eating_outside"));
+                            }
+
 
                         } catch (JSONException e) {
                             e.printStackTrace();

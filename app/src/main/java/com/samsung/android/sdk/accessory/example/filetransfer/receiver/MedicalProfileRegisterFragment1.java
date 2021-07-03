@@ -27,12 +27,14 @@ import android.widget.Toast;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Dictionary;
 import java.util.List;
 
 import okhttp3.Call;
@@ -79,8 +81,6 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         contactInput = (EditText) getView().findViewById(R.id.emergencyContactNumberInput);
 
 
-
-
         mDisplayDate = (TextView) getView().findViewById(R.id.dobDateInput);
 
         mDisplayDate.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +112,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             }
         };
 
-
+        new loadValues().execute();
 
         nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -124,6 +124,29 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
 //                Toast.makeText(getApplicationContext(), selectedRadio, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private String getValidValue(String value){
+        if(value!= "null"){
+            return value;
+        }
+        return "";
+    }
+
+    private void setFieldsFromJson(Response response) throws IOException, JSONException {
+        String jsonData = response.body().string();
+        JSONObject json = new JSONObject(jsonData);
+
+        JSONArray jsonarray = new JSONArray(json.getString("data"));
+        if(jsonarray.length() > 0) {
+            JSONObject Jobject = (JSONObject) jsonarray.getJSONObject(0);
+
+            heightInput.setText(getValidValue(Jobject.getString("height")));
+            weightInput.setText(getValidValue(Jobject.getString("weight")));
+            nameInput.setText(getValidValue(Jobject.getString("name")));
+            contactInput.setText(getValidValue(Jobject.getString("contact")));
+            mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
+        }
     }
 
 
@@ -158,20 +181,10 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
                     if (!response.isSuccessful()) {
                         // Handle the error
                         Log.d("sending", "un successful");
-                    }else{
+                    } else {
 
-                        String jsonData = response.body().string();
                         try {
-                            JSONObject Jobject = new JSONObject(jsonData);
-
-
-                            heightInput.setText(Jobject.getString("height"));
-                            weightInput.setText(Jobject.getString("weight"));
-                            nameInput.setText(Jobject.getString("name"));
-                            contactInput.setText(Jobject.getString("contact"));
-                            mDisplayDate.setText(Jobject.getString("dob"));
-
-
+                            setFieldsFromJson(response);
                         } catch (JSONException e) {
                             e.printStackTrace();
 
@@ -207,7 +220,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
 
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
 
-            String dob =  mDisplayDate.getText().toString();
+            String dob = mDisplayDate.getText().toString();
             String height = heightInput.getText().toString();
             String weight = weightInput.getText().toString();
             String name = nameInput.getText().toString();
@@ -217,9 +230,9 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             try {
                 jsonObject.put("height", height);
                 jsonObject.put("registration_id", regi_id);
-                jsonObject.put("weight",  weight);
-                jsonObject.put("name",  name);
-                jsonObject.put("contact",  contact);
+                jsonObject.put("weight", weight);
+                jsonObject.put("name", name);
+                jsonObject.put("contact", contact);
                 jsonObject.put("dob", dob);
 
             } catch (JSONException e) {
@@ -227,10 +240,9 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             }
 
 
-
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-            RequestBody body = RequestBody.create( jsonObject.toString(), JSON); // new
+            RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // new
             Log.d("tag=======", String.valueOf(body));
 
             Request request = new Request.Builder().url(MEDICAL_PROFILE_URL) // The URL to send the data to
@@ -253,7 +265,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
                     if (!response.isSuccessful()) {
                         // Handle the error
                         Log.d("sending", "un successful");
-                    }else{
+                    } else {
                         Log.d("sending", " successful");
                         getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                                 new MedicalProfileRegisterFragment2()).commit();

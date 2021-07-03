@@ -9,7 +9,7 @@
             android:title="Profile Registration" />
         <item
             android:id="@+id/dashboard"
-            android:icon="@drawable/ic_dashboard_foreground"
+            android:icon="@drawable/ic_baseline_dashboard_24"
             android:title="Dashboard" />
 <!--        <item-->
 <!--            android:id="@+id/nav_profile"-->
