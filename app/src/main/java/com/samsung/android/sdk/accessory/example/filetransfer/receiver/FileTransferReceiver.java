@@ -31,14 +31,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.provider.Settings;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.NotificationCompat;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -50,21 +49,13 @@ import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.
 import com.samsung.android.sdk.accessoryfiletransfer.SAFileTransfer;
 import com.samsung.android.sdk.accessoryfiletransfer.SAFileTransfer.EventListener;
 import com.samsung.android.sdk.accessoryfiletransfer.SAft;
+import androidx.annotation.NonNull;
 
-
-import android.app.Service;
-import android.content.Intent;
-import android.media.MediaPlayer;
-import android.os.IBinder;
-import android.provider.Settings;
-import android.support.annotation.Nullable;
 
 
 
 
 import java.io.UnsupportedEncodingException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
 

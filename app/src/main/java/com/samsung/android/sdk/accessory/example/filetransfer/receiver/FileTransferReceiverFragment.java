@@ -15,10 +15,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.NotificationManagerCompat;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -127,6 +129,8 @@ public class FileTransferReceiverFragment extends Fragment {
         PACKAGE_NAME = thisContext.getPackageName();
 
 
+
+        BarChartActivity bar = new BarChartActivity(thisContext, getActivity(), R.id.idBarChart);
         listview = (ListView) getView().findViewById(R.id.list);
         listItems = new java.util.ArrayList<String>();
 
