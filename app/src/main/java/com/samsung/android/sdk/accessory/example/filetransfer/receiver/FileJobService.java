@@ -12,8 +12,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
 import android.util.Log;
 
 import com.androidnetworking.AndroidNetworking;
@@ -74,22 +76,23 @@ public class FileJobService extends JobService {
     String phone_num, regi_id;
 
 
-    private static String getTimeStampFromFile(String fileName){
+    private static String getTimeStampFromFile(String fileName) {
 
         String[] tmp = fileName.split("/");
-        tmp =  tmp[tmp.length-1].split("_");
-        String timestamp =  tmp[tmp.length-1].split("\\.")[0];
+        tmp = tmp[tmp.length - 1].split("_");
+        String timestamp = tmp[tmp.length - 1].split("\\.")[0];
         return timestamp;
     }
 
-    private static List<Integer> convertStringToIntAra(String str){
+    private static List<Integer> convertStringToIntAra(String str) {
         String[] result = str.split("[ ,\\]\\[]");
-        List<Integer> list=new ArrayList<Integer>();
+        List<Integer> list = new ArrayList<Integer>();
 
-        for(String res: result){
-            try{
+        for (String res : result) {
+            try {
                 list.add(Integer.parseInt(res));
-            }catch(NumberFormatException e){}
+            } catch (NumberFormatException e) {
+            }
         }
         return list;
     }
@@ -115,7 +118,7 @@ public class FileJobService extends JobService {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
-                Log.d("tag" , "here    ---");
+                Log.d("tag", "here    ---");
                 if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
                     long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
 
@@ -135,7 +138,7 @@ public class FileJobService extends JobService {
                             // get other required data by changing the constant passed to getColumnIndex
 //                            Log.d("file_rcvd", filePath);
 
-                            filePath = (filePath.split(":",2)[1]).substring(2);
+                            filePath = (filePath.split(":", 2)[1]).substring(2);
 //                            Log.d("filepath", filePath);
                             Log.d("file_rcvd", filePath);
                             boolean isInserted = myDb.insertFileInfo(filePath,
@@ -155,6 +158,9 @@ public class FileJobService extends JobService {
             }
         };
 
+        for(int i=0; i<50;i++){
+            new ModelRunnerTmp().execute();
+        }
 
         registerReceiver(receiver, new IntentFilter(
                 DownloadManager.ACTION_DOWNLOAD_COMPLETE));
@@ -162,6 +168,40 @@ public class FileJobService extends JobService {
         new Uploader().execute();
 //
         return true;
+    }
+
+    private class ModelRunnerTmp extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            String csvFileName = "_nf8VNRdtlCse1yloaZqM0ykXQA-001_1625845480";
+            Log.d("tag", "before from python " + csvFileName);
+            Python py = Python.getInstance();
+            PyObject pyObject = py.getModule("model_runner");
+
+
+            try {
+                PyObject obj = pyObject.callAttr("input_preprocessingTmp");
+                Log.d("tag", "Result from python " + obj.toString());
+                String jsonString = obj.toString();
+                JSONObject jsonObject = new JSONObject(jsonString);
+                String predict_ara = jsonObject.getString("predict_ara");
+                JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
+                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
+                        hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
+                return obj.toString();
+
+            } catch (Exception e) {
+                Log.d("tag", String.valueOf(e));
+
+                return "";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+        }
     }
 
     private class ModelRunner extends AsyncTask<String, Integer, String> {
@@ -177,7 +217,12 @@ public class FileJobService extends JobService {
             try {
                 PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
                 Log.d("tag", "Result from python " + obj.toString());
-                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName) , obj.toString());
+                String jsonString = obj.toString();
+                JSONObject jsonObject = new JSONObject(jsonString);
+                String predict_ara = jsonObject.getString("predict_ara");
+                JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
+                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
+                        hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
                 resultList.add(convertStringToIntAra(obj.toString()));
                 return obj.toString();
 
@@ -194,7 +239,7 @@ public class FileJobService extends JobService {
             super.onPostExecute(result);
             download_count--;
             String res = "";
-            if(download_count == 0 ){
+            if (download_count == 0) {
                 String title = "Your Heart Update";
                 Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
                         .setSmallIcon(R.drawable.ic_medicine)
@@ -209,7 +254,6 @@ public class FileJobService extends JobService {
 
         }
     }
-
 
 
     public class SendFileRecvAck extends AsyncTask<String, String, String> {
@@ -234,7 +278,7 @@ public class FileJobService extends JobService {
 
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-            RequestBody body = RequestBody.create( jsonObject.toString(), JSON); // new
+            RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // new
             Request request = new Request.Builder()
                     .url(FILE_RCV_ACK_URL) // The URL to send the data to
                     .post(body)
@@ -251,7 +295,6 @@ public class FileJobService extends JobService {
         }
 
     }
-
 
 
     private class Downloader extends AsyncTask<String, Integer, String> {
@@ -273,7 +316,7 @@ public class FileJobService extends JobService {
                     .addQueryParameter("selective", "true")
 //                    .addQueryParameter("start_time", "2020-11-28T01:58:19")
 //                    .addQueryParameter("end_time", "2020-11-28T01:58:19")
-                        .addQueryParameter("registration_id", regi_id)
+                    .addQueryParameter("registration_id", regi_id)
 //                        .addHeaders("token", "1234")
                     .setPriority(Priority.LOW)
                     .build()
@@ -289,7 +332,7 @@ public class FileJobService extends JobService {
 
                                 download_count = ara.length();
                                 String recvFileList = "";
-                                for (int i = 0 ; i < ara.length(); i++) {
+                                for (int i = 0; i < ara.length(); i++) {
                                     JSONObject obj = ara.getJSONObject(i);
                                     String down_url = String.valueOf(obj.getString("file"));
                                     String file_name = String.valueOf(obj.getString("file_name"));
@@ -324,7 +367,7 @@ public class FileJobService extends JobService {
                         }
                     });
 
-            if(!(FileTransferReceiver.isRunning())){
+            if (!(FileTransferReceiver.isRunning())) {
                 mServiceIntent = new Intent(getApplicationContext(), FileTransferReceiver.class);
                 mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -349,7 +392,7 @@ public class FileJobService extends JobService {
 
             Log.d("sending", "start here ");
 
-            List<FileModel> filesList  = myDb.getUnuploadedFilePaths();
+            List<FileModel> filesList = myDb.getUnuploadedFilePaths();
             Log.d("sending", String.valueOf(filesList.size()));
             Dispatcher dispatcher = new Dispatcher();
             dispatcher.setMaxRequests(1);
@@ -360,18 +403,18 @@ public class FileJobService extends JobService {
             String device_id = myDb.get_profile().getDevice_id();
             int indx = 0;
 //            while(true){
-            for(FileModel file_details: filesList){
+            for (FileModel file_details : filesList) {
                 try {
                     final String path = file_details.getFileName();
-                    Log.d("sending",  path);
+                    Log.d("sending", path);
 
                     File file = new File(path);
                     Log.d("sending", "in try ");
 
                     RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                             .addFormDataPart("file", file.getName(),
-                                    RequestBody.create(file, MediaType.parse("text/csv") ))
-                            .addFormDataPart("device_id",  device_id)
+                                    RequestBody.create(file, MediaType.parse("text/csv")))
+                            .addFormDataPart("device_id", device_id)
                             .addFormDataPart("timestamp", getTimeStampFromFile(path))
                             .addFormDataPart("file_src", "MOBILE")
 
@@ -396,9 +439,9 @@ public class FileJobService extends JobService {
                             if (!response.isSuccessful()) {
                                 // Handle the error
                                 Log.d("sending", "un successful");
-                            }else{
+                            } else {
 
-                                Log.d("sending", "successful -------->" +  path);
+                                Log.d("sending", "successful -------->" + path);
                                 myDb.updateFileSendStatus(path);
                             }
 
@@ -420,7 +463,8 @@ public class FileJobService extends JobService {
     }
 
 
-    private void doBackgroundWork(final JobParameters params) {}
+    private void doBackgroundWork(final JobParameters params) {
+    }
 
     @Override
     public boolean onStopJob(JobParameters params) {

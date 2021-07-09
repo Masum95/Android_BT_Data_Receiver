@@ -46,10 +46,17 @@
     </ListView>
 
     <!--Ui component for our bar chart-->
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/idBarChart"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+<!--    <com.github.mikephil.charting.charts.BarChart-->
+<!--        android:id="@+id/idBarChart"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent" />-->
 
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_weight="0.8"
+        tools:layout_editor_absoluteX="-16dp"
+        tools:layout_editor_absoluteY="395dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

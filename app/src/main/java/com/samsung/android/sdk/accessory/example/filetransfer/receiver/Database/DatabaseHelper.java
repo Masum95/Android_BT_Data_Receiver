@@ -23,6 +23,8 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Da
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_PHONE_NUM;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_REGI_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_USER_NAME;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_AVG_ACTIVITY;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_AVG_HEART_RATE;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_RESULT;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel.COL_TIMESTAMP;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getDateTimeFromTimestamp;
@@ -213,13 +215,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void createResult(String file_name, String timestamp, String result) {
+    public void createResult(String file_name, String timestamp, String result, String activity, double heart_rate ) {
         Log.d("CREATE", file_name);
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_FILE_NAME, file_name);
         values.put(COL_RESULT, result);
-        values.put(COL_TIMESTAMP, getDateTimeFromTimestamp(timestamp));
+        values.put(COL_TIMESTAMP, timestamp);
+        values.put(COL_AVG_ACTIVITY, activity);
+        values.put(COL_AVG_HEART_RATE, heart_rate);
 
         db.insert( ResultModel.TABLE_NAME, null, values);
         db.close();
@@ -250,6 +254,44 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 ResultModel result = new ResultModel();
                 result.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
                 result.setResult(cursor.getString(cursor.getColumnIndex(COL_RESULT)));
+                result.setAvg_activity(cursor.getString(cursor.getColumnIndex(COL_AVG_ACTIVITY)));
+                result.setAvg_hr(cursor.getDouble(cursor.getColumnIndex(COL_AVG_HEART_RATE)));
+                result.setTimestamp(cursor.getString(cursor.getColumnIndex(ResultModel.COL_TIMESTAMP)));
+
+
+                results.add(result);
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return notes list
+        return results;
+    }
+
+    public List<ResultModel> getResultsOfNHours(Integer... args) {
+        int hours = args.length > 0 ? args[0] : 24;
+        List<ResultModel> results = new ArrayList<>();
+
+        // Select All Query
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s) >=datetime('now', '-%d Hour') ORDER BY ASC;",  ResultModel.TABLE_NAME, COL_TIMESTAMP,   hours);
+
+
+
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                ResultModel result = new ResultModel();
+                result.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
+                result.setResult(cursor.getString(cursor.getColumnIndex(COL_RESULT)));
+                result.setAvg_activity(cursor.getString(cursor.getColumnIndex(COL_AVG_ACTIVITY)));
+                result.setAvg_hr(cursor.getDouble(cursor.getColumnIndex(COL_AVG_HEART_RATE)));
                 result.setTimestamp(cursor.getString(cursor.getColumnIndex(ResultModel.COL_TIMESTAMP)));
 
 

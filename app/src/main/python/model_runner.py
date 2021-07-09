@@ -5,6 +5,7 @@ import torch
 from torch.nn import functional as F
 from models.deepbeat_bayesian import Bayesian_Deepbeat
 import math
+import json
 
 
 def sliding_window(x, w=800, o=400):
@@ -64,4 +65,13 @@ def input_preprocessing(model_path, csv_filepath):
 	ppg = df[1].to_numpy()
 	# return ppg
 	# return df[1].to_numpy().shape
-	return np.argmax(run_model(model_path, ppg), axis=1)
+	return json.dumps({'predict_ara': np.argmax(run_model(model_path, ppg), axis=1), 'hear_rate_data': { 'activity': 'W', 'hr': '80.95' }})
+
+
+def input_preprocessingTmp():
+	"""
+    Following program takes csv_directory as input, does necessary operations and then outputs another csv in same directory.
+    :param csv_filepath // path where all csv files will be stored
+    :return:
+    """
+	return json.dumps({'predict_ara': '[1 0 0 1]', 'hear_rate_data': { 'activity': 'W', 'hr': '80.95' }})

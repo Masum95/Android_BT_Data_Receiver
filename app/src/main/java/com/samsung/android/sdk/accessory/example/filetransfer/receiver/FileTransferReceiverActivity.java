@@ -148,13 +148,16 @@ public class FileTransferReceiverActivity<ArrayList, listItems, ListElements> ex
 
 
 
-        List<ResultModel> resultList  = myDb.getResults(5);
+        List<ResultModel> resultList  = myDb.getResultsOfNHours(10);
         listItems.clear();
         listItems.add("Previous History");
         for(ResultModel result: resultList){
             String timestamp = result.getTimestamp(); // id is column name in db
             String res = result.getResult();
-            listItems.add(timestamp + " <--> " + res);
+            String activity = result.getAvg_activity();
+            double hr = result.getAvg_hr();
+            listItems.add(timestamp + " <--> " + res +  " <--> " +  activity + "<-->" + hr);
+
         }
 
         Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));

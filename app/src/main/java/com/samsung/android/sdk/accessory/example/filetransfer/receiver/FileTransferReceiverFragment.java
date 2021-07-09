@@ -130,32 +130,35 @@ public class FileTransferReceiverFragment extends Fragment {
 
 
 
-        BarChartActivity bar = new BarChartActivity(thisContext, getActivity(), R.id.idBarChart);
-        listview = (ListView) getView().findViewById(R.id.list);
-        listItems = new java.util.ArrayList<String>();
-
-
-
-
-
-        List<ResultModel> resultList  = myDb.getResults(5);
-        listItems.clear();
-        listItems.add("Previous History");
-        for(ResultModel result: resultList){
-            String timestamp = result.getTimestamp(); // id is column name in db
-            String res = result.getResult();
-            listItems.add(timestamp + " <--> " + res);
-        }
+//        BarChartActivity bar = new BarChartActivity(thisContext, getActivity(), R.id.idBarChart);
+        LineChartModule bar = new LineChartModule(thisContext, getActivity(), R.id.lineChart);
+//        listview = (ListView) getView().findViewById(R.id.list);
+//        listItems = new java.util.ArrayList<String>();
+//
+//
+//
+//
+//
+//        List<ResultModel> resultList  = myDb.getResults(5);
+//        listItems.clear();
+//        listItems.add("Previous History");
+//        for(ResultModel result: resultList){
+//            String timestamp = result.getTimestamp(); // id is column name in db
+//            String res = result.getResult();
+//            String activity = result.getAvg_activity();
+//            double hr = result.getAvg_hr();
+//            listItems.add(timestamp + " <--> " + res +  " <--> " +  activity + "<-->" + hr);
+//        }
 
         Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));
 
 
         new FileTransferReceiverFragment.StarterTask().execute("my string parameter");
 
-        adapter = new ArrayAdapter<String>(thisContext,
-                android.R.layout.simple_list_item_1,
-                listItems);
-        listview.setAdapter(adapter);
+//        adapter = new ArrayAdapter<String>(thisContext,
+//                android.R.layout.simple_list_item_1,
+//                listItems);
+//        listview.setAdapter(adapter);
 
         reloadBtn = (Button) getView().findViewById(R.id.btReload);
         //getting buttons from xml
