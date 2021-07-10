@@ -70,7 +70,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:text="116 bpm"
+        android:text=""
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/uparrow"
@@ -81,7 +81,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="110dp"
-        android:text="32 bpm"
+        android:text=""
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/downarrow"
@@ -125,9 +125,11 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
+            android:id="@+id/warningLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="invisible">
 
             <ImageView
                 android:id="@+id/warningImage"
@@ -177,10 +179,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout">
 
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/graph"
+<!--        <com.github.mikephil.charting.charts.BarChart-->
+<!--            android:id="@+id/graph"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent" />-->
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="320dp"
+            android:layout_weight="0.8"
+            tools:layout_editor_absoluteX="-16dp"
+            tools:layout_editor_absoluteY="395dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

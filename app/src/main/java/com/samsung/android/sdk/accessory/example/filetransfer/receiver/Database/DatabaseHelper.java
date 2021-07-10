@@ -5,20 +5,28 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
+
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Result;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_SRC_KEYWORD;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_FILE_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_IS_UPLOADED;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_SRC;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel.COL_HEIGHT;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_DEVICE_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_PHONE_NUM;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_REGI_ID;
@@ -58,6 +66,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.execSQL(ProfileModel.CREATE_TABLE);
         db.execSQL(ResultModel.CREATE_TABLE);
+        db.execSQL(MedicalProfileModel.CREATE_TABLE);
         Log.d("tag=======", "here in creation ");
 //        onCreate();
     }
@@ -98,10 +107,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Select All Query
         String selectQuery = null;
-        if(limit==0){
+        if (limit == 0) {
             selectQuery = "SELECT  * FROM " + FileModel.TABLE_NAME + " ORDER BY " +
                     FileModel.COL_ID + " DESC";
-        }else{
+        } else {
             selectQuery = "SELECT  * FROM " + FileModel.TABLE_NAME + " ORDER BY " +
                     FileModel.COL_ID + "  DESC limit " + limit;
         }
@@ -133,11 +142,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public List<FileModel> getUnuploadedFilePaths(Integer... args) {
         List<FileModel> files = new ArrayList<>();
-        String selectQuery = "SELECT * FROM " + FileModel.TABLE_NAME + " where "+ COL_SRC + " = ?  AND " + COL_IS_UPLOADED + " = 0";
+        String selectQuery = "SELECT * FROM " + FileModel.TABLE_NAME + " where " + COL_SRC + " = ?  AND " + COL_IS_UPLOADED + " = 0";
 
 
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, new String[] { WATCH_SRC_KEYWORD });
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{WATCH_SRC_KEYWORD});
 
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
@@ -163,45 +172,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void updateFileSendStatus(String... args) {
         String fileName = args[0];
 
-        String updateSql = "UPDATE " + FileModel.TABLE_NAME  + " SET " + COL_IS_UPLOADED + " = 1 WHERE " + COL_FILE_NAME + " = ?";
-
+        String updateSql = "UPDATE " + FileModel.TABLE_NAME + " SET " + COL_IS_UPLOADED + " = 1 WHERE " + COL_FILE_NAME + " = ?";
 
 
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL(updateSql , new String[] { fileName });
+        db.execSQL(updateSql, new String[]{fileName});
 
         // close db connection
         db.close();
 
     }
 
-    private String get_create_command(String table_name, int num_of_cols, String[] cols){
-        int col_len = cols.length;
-        if (col_len != num_of_cols) throw new IllegalArgumentException("Number of cols and column arrays size are not same");
-
-        String str = "INSERT or replace INTO  " + table_name;
-        str += " ( " ;
-        for(int i=0; i<col_len; i++){
-            String col = cols[i];
-            if(i==col_len-1) str += col + " ";
-            else str += col + " , ";
-        }
-        str += " ) ";
-        str += " VALUES( ";
-        for(int i=0; i<col_len; i++){
-            if(i==col_len-1) str += " ? ";
-            else str += " ? , ";
-        }
-        str +=  " )";
-        return str;
-    }
 
     public void createProfile(String user_name, String phone_num, String device_id, String regi_id) {
 
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        Log.d("tag=======", user_name +  phone_num +  device_id +  regi_id);
+        Log.d("tag=======", user_name + phone_num + device_id + regi_id);
 
         values.put(COL_USER_NAME, user_name);
         values.put(COL_PHONE_NUM, phone_num);
@@ -209,13 +197,85 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COL_REGI_ID, regi_id);
         Log.d("tag=======", values.toString());
 
-        db.insert( ProfileModel.TABLE_NAME, null, values);
+        db.insert(ProfileModel.TABLE_NAME, null, values);
+        db.close();
+
+    }
+
+    public MedicalProfileModel getMedicalProfile(String regi_id) {
+        int id;
+        String selectQuery = "SELECT " + MedicalProfileModel.COL_ID + "  FROM " + MedicalProfileModel.TABLE_NAME + " WHERE " + MedicalProfileModel.COL_REGI_ID + "=" + regi_id;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        MedicalProfileModel medicalProfileModel = null;
+
+        if (cursor.getCount() > 0) {
+            if (cursor.moveToFirst()) {
+
+                medicalProfileModel = new MedicalProfileModel();
+                medicalProfileModel.setRegistration_id(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_REGI_ID)));
+                medicalProfileModel.setHeight(cursor.getString(cursor.getColumnIndex(COL_HEIGHT)));
+                medicalProfileModel.setWeight(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_WEIGHT)));
+                medicalProfileModel.setName(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_NAME)));
+                medicalProfileModel.setContact(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_CONTACT)));
+                medicalProfileModel.setDob(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_DOB)));
+                medicalProfileModel.setHas_heart_disease(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_HEART_DISEASE)));
+                medicalProfileModel.setHas_parent_heart_disease(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_PARENT_HEART_DISEASE)));
+                medicalProfileModel.setHas_hyper_tension(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_HYPER_TENSION)));
+                medicalProfileModel.setHas_covid(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_COVID)));
+                medicalProfileModel.setHas_smoking(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_SMOKING)));
+                medicalProfileModel.setHas_eating_outside(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_EATING_OUTSIDE)));
+
+
+            }
+        }
+        cursor.close();
+        return medicalProfileModel;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void createOrUpdateMedicalProfile(String regi_Id, HashMap<String, String> data) {
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(MedicalProfileModel.COL_REGI_ID, regi_Id);
+        if (data.containsKey("height")) values.put(COL_HEIGHT, data.get("height"));
+        if (data.containsKey("weight")) values.put(MedicalProfileModel.COL_WEIGHT, data.get("weight"));
+        if (data.containsKey("name")) values.put(MedicalProfileModel.COL_NAME, data.get("name"));
+        if (data.containsKey("contact")) values.put(MedicalProfileModel.COL_CONTACT, data.get("contact"));
+        if (data.containsKey("dob")) values.put(MedicalProfileModel.COL_DOB, data.get("dob"));
+        if (data.containsKey("has_heart_disease"))
+            values.put(MedicalProfileModel.COL_HAS_HEART_DISEASE, data.get("has_heart_disease"));
+        if (data.containsKey("has_parent_heart_disease"))
+            values.put(MedicalProfileModel.COL_HAS_PARENT_HEART_DISEASE, data.get("has_parent_heart_disease"));
+        if (data.containsKey("has_hyper_tension"))
+            values.put(MedicalProfileModel.COL_HAS_HYPER_TENSION, data.get("has_hyper_tension"));
+        if (data.containsKey("has_covid")) values.put(MedicalProfileModel.COL_HAS_COVID, data.get("has_covid"));
+        if (data.containsKey("has_smoking")) values.put(MedicalProfileModel.COL_HAS_SMOKING, data.get("has_smoking"));
+        if (data.containsKey("has_eating_outside"))
+            values.put(MedicalProfileModel.COL_HAS_EATING_OUTSIDE, data.get("has_eating_outside"));
+
+        if(getMedicalProfile(regi_Id) != null){
+            db.update(MedicalProfileModel.TABLE_NAME, values, MedicalProfileModel.COL_REGI_ID + "=" + regi_Id, null);
+
+        }else{
+            db.insert(MedicalProfileModel.TABLE_NAME, null, values);
+
+        }
+
+
+
+        Log.d("tag=======", values.toString());
+
         db.close();
 
     }
 
 
-    public void createResult(String file_name, String timestamp, String result, String activity, double heart_rate ) {
+    public void createResult(String file_name, String timestamp, String result, String activity, double heart_rate) {
         Log.d("CREATE", file_name);
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -225,7 +285,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COL_AVG_ACTIVITY, activity);
         values.put(COL_AVG_HEART_RATE, heart_rate);
 
-        db.insert( ResultModel.TABLE_NAME, null, values);
+        db.insert(ResultModel.TABLE_NAME, null, values);
         db.close();
 
     }
@@ -236,10 +296,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Select All Query
         String selectQuery = null;
-        if(limit==0){
+        if (limit == 0) {
             selectQuery = "SELECT  * FROM " + ResultModel.TABLE_NAME + " ORDER BY " +
                     FileModel.COL_ID + " DESC";
-        }else{
+        } else {
             selectQuery = "SELECT  * FROM " + ResultModel.TABLE_NAME + " ORDER BY " +
                     FileModel.COL_ID + "  DESC limit " + limit;
         }
@@ -275,10 +335,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<ResultModel> results = new ArrayList<>();
 
         // Select All Query
-        String selectQuery = String.format("SELECT * FROM %s where datetime(%s) >=datetime('now', '-%d Hour') ORDER BY ASC;",  ResultModel.TABLE_NAME, COL_TIMESTAMP,   hours);
-
-
-
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s) >=datetime('now', '-%d Hour') ORDER BY ASC;", ResultModel.TABLE_NAME, COL_TIMESTAMP, hours);
 
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -319,21 +376,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d("tag=======", "ekhane ashse");
 
         ProfileModel profile = new ProfileModel();
-        if (cursor != null){
+        if (cursor != null) {
             Log.d("tag=======", "null pay nai ");
 
-        }else{
+        } else {
             Log.d("tag=======", "Null paise ");
 
         }
 
         if (cursor.moveToFirst()) {
-                Log.d("tag=======", cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
+            Log.d("tag=======", cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
 
-                profile.setUserName(cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
-                profile.setDevice_id(cursor.getString(cursor.getColumnIndex(COL_DEVICE_ID)));
-                profile.setPhone_num(cursor.getString(cursor.getColumnIndex(COL_PHONE_NUM)));
-                profile.setRegi_id(cursor.getString(cursor.getColumnIndex(COL_REGI_ID)));
+            profile.setUserName(cursor.getString(cursor.getColumnIndex(COL_USER_NAME)));
+            profile.setDevice_id(cursor.getString(cursor.getColumnIndex(COL_DEVICE_ID)));
+            profile.setPhone_num(cursor.getString(cursor.getColumnIndex(COL_PHONE_NUM)));
+            profile.setRegi_id(cursor.getString(cursor.getColumnIndex(COL_REGI_ID)));
 
         }
 
@@ -342,8 +399,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return profile;
 
     }
-
-
 
 
 //    public Note getNote(long id) {

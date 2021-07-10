@@ -29,12 +29,19 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,8 +50,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 
@@ -57,7 +73,7 @@ public class FileTransferReceiverFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         thisContext = container.getContext();
 
-        return inflater.inflate(R.layout.ft_receiver_activity, container, false);
+        return inflater.inflate(R.layout.dashboard2, container, false);
     }
 
 
@@ -77,7 +93,8 @@ public class FileTransferReceiverFragment extends Fragment {
     private Button reloadBtn;
     private Button buttonStop;
 
-
+    TextView phone_numTextView, nameTextView, upBpmTxtView, downBpmTxtView;
+    ImageView downarrowView, uparrowView;
     private EditText GetValue;
 
     java.util.ArrayList<String> listItems;
@@ -93,7 +110,7 @@ public class FileTransferReceiverFragment extends Fragment {
     private FileTransferReceiver mYourService;
     public static String PACKAGE_NAME;
 
-
+    LinearLayout warningLayout;
 
     DownloadManager downloadmanager;
 
@@ -125,19 +142,47 @@ public class FileTransferReceiverFragment extends Fragment {
         mCtxt = thisContext;
         myDb = new DatabaseHelper(thisContext);
 
+        String regi_id = myDb.get_profile().getRegi_id();
 
         PACKAGE_NAME = thisContext.getPackageName();
 
+        warningLayout = (LinearLayout) getView().findViewById(R.id.warningLayout);
+        phone_numTextView =  getView().findViewById(R.id.phoneNum);
+        nameTextView =  getView().findViewById(R.id.profileName);
+        upBpmTxtView =  getView().findViewById(R.id.upBpm);
+        downBpmTxtView =  getView().findViewById(R.id.downBpm);
+        downarrowView =  getView().findViewById(R.id.downarrow);
+        uparrowView =  getView().findViewById(R.id.uparrow);
 
+        warningLayout.setVisibility(View.VISIBLE);
 
-//        BarChartActivity bar = new BarChartActivity(thisContext, getActivity(), R.id.idBarChart);
+        String mobile_num = myDb.get_profile().getPhone_num();
+        String name = myDb.getMedicalProfile(regi_id).getName();
+        phone_numTextView.setText(mobile_num);
+        nameTextView.setText(name);
+
+        List<ResultModel> resultList = myDb.getResults(24);
+        double maxHR = -1;
+        double minHr = 1000;
+        for(ResultModel resultModel: resultList){
+            maxHR = Math.max(resultModel.getAvg_hr(), maxHR);
+            minHr = Math.min(resultModel.getAvg_hr(), minHr);
+        }
+        if(maxHR != -1){
+            upBpmTxtView.setText(String.valueOf(maxHR));
+        }else{
+            uparrowView.setVisibility(View.INVISIBLE);
+        }
+
+        if(minHr != 1000){
+            downBpmTxtView.setText(String.valueOf(minHr));
+        }else{
+            downarrowView.setVisibility(View.INVISIBLE);
+        }
+
         LineChartModule bar = new LineChartModule(thisContext, getActivity(), R.id.lineChart);
 //        listview = (ListView) getView().findViewById(R.id.list);
 //        listItems = new java.util.ArrayList<String>();
-//
-//
-//
-//
 //
 //        List<ResultModel> resultList  = myDb.getResults(5);
 //        listItems.clear();
@@ -150,67 +195,123 @@ public class FileTransferReceiverFragment extends Fragment {
 //            listItems.add(timestamp + " <--> " + res +  " <--> " +  activity + "<-->" + hr);
 //        }
 
+//        adapter = new ArrayAdapter<String>(thisContext,
+//                android.R.layout.simple_list_item_1,
+//                listItems);
+//        listview.setAdapter(adapter);
         Log.d("here in activity sleep", String.valueOf(Thread.currentThread().getId()));
 
 
         new FileTransferReceiverFragment.StarterTask().execute("my string parameter");
 
-//        adapter = new ArrayAdapter<String>(thisContext,
-//                android.R.layout.simple_list_item_1,
-//                listItems);
-//        listview.setAdapter(adapter);
 
-        reloadBtn = (Button) getView().findViewById(R.id.btReload);
-        //getting buttons from xml
-        buttonStop = (Button) getView().findViewById(R.id.buttonStop);
+//        reloadBtn = (Button) getView().findViewById(R.id.btReload);
+//        //getting buttons from xml
+//        buttonStop = (Button) getView().findViewById(R.id.buttonStop);
 
 
-
-        reloadBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                List<ResultModel> resultList  = myDb.getResults(5);
-                listItems.clear();
-                listItems.add("Previous History");
-                for(ResultModel result: resultList){
-                    String timestamp = result.getTimestamp(); // id is column name in db
-                    String res = result.getResult();
-                    listItems.add(timestamp + " <--> " + res);
-                }
-
-                adapter.notifyDataSetChanged();
-
-            }
-        });
-
-
-        buttonStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
-                if (isMyServiceRunning(mReceiverService.getClass())) {
-
-                    getActivity().startService(mServiceIntent);
-
-                }
-            }
-        });
+//        reloadBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                List<ResultModel> resultList  = myDb.getResults(5);
+//                listItems.clear();
+//                listItems.add("Previous History");
+//                for(ResultModel result: resultList){
+//                    String timestamp = result.getTimestamp(); // id is column name in db
+//                    String res = result.getResult();
+//                    listItems.add(timestamp + " <--> " + res);
+//                }
+//
+//                adapter.notifyDataSetChanged();
+//
+//            }
+//        });
+//
+//
+//        buttonStop.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
+//                if (isMyServiceRunning(mReceiverService.getClass())) {
+//
+//                    getActivity().startService(mServiceIntent);
+//
+//                }
+//            }
+//        });
 
         mServiceIntent = new Intent();
         mServiceIntent.setAction("restartservice");
         mServiceIntent.setClass(thisContext, Restarter.class);
         thisContext.sendBroadcast(mServiceIntent);
-
+        new syncMedicalProfile().execute();
 //        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
 //                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 
+
+    private class syncMedicalProfile extends AsyncTask<String, Integer, String> {
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        @Override
+        protected String doInBackground(String... params) {
+
+            OkHttpClient client = new OkHttpClient();
+
+            JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
+
+
+
+
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+            RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // new
+            Log.d("tag=======", String.valueOf(body));
+
+            Request request = new Request.Builder().url(MEDICAL_PROFILE_URL) // The URL to send the data to
+                    .post(body)
+                    .build();
+            Log.d("tag=======", String.valueOf(request));
+
+
+            client.newCall(request).enqueue(new Callback() {
+
+                @Override
+                public void onFailure(final Call call, final IOException e) {
+                    // Handle the error
+                    Log.d("sending", String.valueOf(e));
+
+                }
+
+                @Override
+                public void onResponse(final Call call, final Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        // Handle the error
+                        Log.d("sending", "un successful");
+                    } else {
+                        Log.d("sending", " successful");
+                    }
+
+
+                    // Upload successful
+                }
+            });
+            return "hello";
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+        }
+    }
+
     private class StarterTask extends AsyncTask<String, Integer, String> {
         @Override
         protected String doInBackground(String... params) {
 
-            Log.d("tag", " here before  "+ CSV_FILE_DIR);
+            Log.d("tag", " here before  " + CSV_FILE_DIR);
 
             File csvFolder = new File(CSV_FILE_DIR);
             File modelFolder = new File(MODEL_FILE_DIR);
@@ -219,7 +320,7 @@ public class FileTransferReceiverFragment extends Fragment {
             boolean success = true;
             if (!csvFolder.exists()) {
                 success = csvFolder.mkdirs();
-                Log.d("tag", "Files Created here "+ CSV_FILE_DIR + success);
+                Log.d("tag", "Files Created here " + CSV_FILE_DIR + success);
 
             }
             if (!modelFolder.exists()) {
@@ -231,10 +332,7 @@ public class FileTransferReceiverFragment extends Fragment {
             } else {
 
             }
-            Log.d("tag", "Files Created "+ CSV_FILE_DIR);
-
-
-
+            Log.d("tag", "Files Created " + CSV_FILE_DIR);
 
 
             String modelName = "bayesbeat_cpu.pt";
@@ -262,13 +360,12 @@ public class FileTransferReceiverFragment extends Fragment {
             }
 
 
-
             ComponentName componentName = new ComponentName(mCtxt, FileJobService.class);
             JobInfo info = new JobInfo.Builder(123, componentName)
 //                .setRequiresCharging(true)
 //                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                     .setPersisted(true)
-                    .setPeriodic( SCHEDULER_INTERVAL)
+                    .setPeriodic(SCHEDULER_INTERVAL)
                     .build();
             JobScheduler scheduler = (JobScheduler) getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
             int resultCode = scheduler.schedule(info);
@@ -341,7 +438,7 @@ public class FileTransferReceiverFragment extends Fragment {
 
     }
 
-//    @Override
+    //    @Override
     public void onBackPressed() {
         Log.d("activity", "in on stop ");
 
@@ -428,5 +525,5 @@ public class FileTransferReceiverFragment extends Fragment {
             }
         };
     }
-    
+
 }

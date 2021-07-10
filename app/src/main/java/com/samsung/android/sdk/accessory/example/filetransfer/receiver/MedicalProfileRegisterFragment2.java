@@ -4,6 +4,7 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
@@ -28,6 +30,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import okhttp3.Call;
@@ -158,66 +161,24 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
     }
 
     private class loadValues extends AsyncTask<String, Integer, String> {
-        OkHttpClient client = new OkHttpClient();
-
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
 
+            JSONObject Jobject = Utils.getMedicalProfileJson(getContext());
 
-            HttpUrl.Builder urlBuilder = HttpUrl.parse(MEDICAL_PROFILE_URL).newBuilder();
-            urlBuilder.addQueryParameter("registration_id", regi_id);
-            String url = urlBuilder.build().toString();
+            try {
+                setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
+                setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
+                setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
+                setRadioValue("has_covid", Jobject.getString("has_covid"));
+                setRadioValue("has_smoking", Jobject.getString("has_smoking"));
+                setRadioValue("has_eating_outside", Jobject.getString("has_eating_outside"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
-
-            Request request = new Request.Builder().url(url)// The URL to send the data to
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-
-                @Override
-                public void onFailure(final Call call, final IOException e) {
-                    // Handle the error
-                    Log.d("sending", String.valueOf(e));
-
-                }
-
-                @Override
-                public void onResponse(final Call call, final Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        // Handle the error
-                        Log.d("sending", "un successful");
-                    }else{
-
-                        String jsonData = response.body().string();
-                        try {
-                            JSONObject json = new JSONObject(jsonData);
-
-                            JSONArray jsonarray = new JSONArray(json.getString("data"));
-                            if(jsonarray.length() > 0){
-                                JSONObject Jobject = (JSONObject) jsonarray.getJSONObject(0);
-
-                                setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
-                                setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
-                                setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
-                                setRadioValue("has_covid", Jobject.getString("has_covid"));
-                                setRadioValue("has_smoking", Jobject.getString("has_smoking"));
-                                setRadioValue("has_eating_outside", Jobject.getString("has_eating_outside"));
-                            }
-
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        Log.d("sending", String.valueOf(response));
-
-                    }
-
-
-                    // Upload successful
-                }
-            });
             return "hello";
         }
 
@@ -232,11 +193,11 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
 
     private class submitValues extends AsyncTask<String, Integer, String> {
 
+        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
-            OkHttpClient client = new OkHttpClient();
             String HD = getRadioValue(R.id.radioGroupHD);
             String parent_HD = getRadioValue(R.id.radioGroupPHD);
             String hyperTension = getRadioValue(R.id.radioGroupHT);
@@ -244,61 +205,15 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             String smoking = getRadioValue(R.id.radioGroupSmoking);
             String eatingOutside = getRadioValue(R.id.radioGroupEatOutside);
 
+            HashMap<String, String> map = new HashMap<>();
+            map.put("has_heart_disease", HD);
+            map.put("has_parent_heart_disease", parent_HD);
+            map.put("has_hyper_tension", hyperTension);
+            map.put("has_covid", covid);
+            map.put("has_smoking", smoking);
+            map.put("has_eating_outside", eatingOutside);
 
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("has_heart_disease", HD);
-                jsonObject.put("registration_id", regi_id);
-                jsonObject.put("has_parent_heart_disease", parent_HD);
-                jsonObject.put("has_hyper_tension", hyperTension);
-                jsonObject.put("has_covid", covid);
-                jsonObject.put("has_smoking",  smoking);
-                jsonObject.put("has_eating_outside", eatingOutside);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-//            Log.d("tag=======", jsonObject.toString());
-//            Log.d("tag=======", myDb.get_profile().toString());
-//            Log.d("tag=======", regi_id);
-
-
-
-            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
-            RequestBody body = RequestBody.create( jsonObject.toString(), JSON); // new
-            Log.d("tag=======", String.valueOf(body));
-
-            Request request = new Request.Builder().url(MEDICAL_PROFILE_URL) // The URL to send the data to
-                    .post(body)
-                    .build();
-            Log.d("tag=======", String.valueOf(request));
-
-
-            client.newCall(request).enqueue(new Callback() {
-
-                @Override
-                public void onFailure(final Call call, final IOException e) {
-                    // Handle the error
-                    Log.d("sending", String.valueOf(e));
-
-                }
-
-                @Override
-                public void onResponse(final Call call, final Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        // Handle the error
-                        Log.d("sending", "un successful");
-                    }else{
-                        Log.d("sending", " successful");
-                        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                                new FileTransferReceiverFragment()).commit();
-                    }
-
-
-                    // Upload successful
-                }
-            });
+            myDb.createOrUpdateMedicalProfile(regi_id, map);
             return "hello";
         }
 

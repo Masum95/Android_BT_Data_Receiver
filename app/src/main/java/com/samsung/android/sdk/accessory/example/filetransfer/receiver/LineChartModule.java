@@ -82,7 +82,7 @@ public class LineChartModule {
         }
 
 
-        LineData mLineData = getLineData(5);
+        LineData mLineData = getLineData(24);
         showChart(lineChart, mLineData, Color.rgb(255, 255, 255));
     }
 
@@ -144,7 +144,7 @@ public class LineChartModule {
      */
     private LineData getLineData(int hours) {
 
-        List<ResultModel> resultList = myDb.getResults(24);
+        List<ResultModel> resultList = myDb.getResults(hours);
         ArrayList<Entry> lineEntries = new ArrayList<Entry>();
 
         lineEntries = new ArrayList<Entry>();

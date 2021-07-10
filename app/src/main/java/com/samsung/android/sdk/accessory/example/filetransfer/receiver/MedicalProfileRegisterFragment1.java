@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.util.Log;
@@ -21,9 +22,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +34,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.HashMap;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -121,27 +125,21 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         });
     }
 
-    private String getValidValue(String value){
-        if(value!= "null"){
+    private String getValidValue(String value) {
+        if (value != "null") {
             return value;
         }
         return "";
     }
 
-    private void setFieldsFromJson(Response response) throws IOException, JSONException {
-        String jsonData = response.body().string();
-        JSONObject json = new JSONObject(jsonData);
+    private void setFieldsFromJson(JSONObject Jobject) throws IOException, JSONException {
 
-        JSONArray jsonarray = new JSONArray(json.getString("data"));
-        if(jsonarray.length() > 0) {
-            JSONObject Jobject = (JSONObject) jsonarray.getJSONObject(0);
+        heightInput.setText(getValidValue(Jobject.getString("height")));
+        weightInput.setText(getValidValue(Jobject.getString("weight")));
+        nameInput.setText(getValidValue(Jobject.getString("name")));
+        contactInput.setText(getValidValue(Jobject.getString("contact")));
+        mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
 
-            heightInput.setText(getValidValue(Jobject.getString("height")));
-            weightInput.setText(getValidValue(Jobject.getString("weight")));
-            nameInput.setText(getValidValue(Jobject.getString("name")));
-            contactInput.setText(getValidValue(Jobject.getString("contact")));
-            mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
-        }
     }
 
 
@@ -152,47 +150,46 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
+            JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
+            try {
+                setFieldsFromJson(jsonObject);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+//            HttpUrl.Builder urlBuilder = HttpUrl.parse(MEDICAL_PROFILE_URL).newBuilder();
+//            urlBuilder.addQueryParameter("registration_id", regi_id);
+//            String url = urlBuilder.build().toString();
+//
+//
+//            Request request = new Request.Builder().url(url)// The URL to send the data to
+//                    .build();
 
-
-            HttpUrl.Builder urlBuilder = HttpUrl.parse(MEDICAL_PROFILE_URL).newBuilder();
-            urlBuilder.addQueryParameter("registration_id", regi_id);
-            String url = urlBuilder.build().toString();
-
-
-            Request request = new Request.Builder().url(url)// The URL to send the data to
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-
-                @Override
-                public void onFailure(final Call call, final IOException e) {
-                    // Handle the error
-                    Log.d("sending", String.valueOf(e));
-
-                }
-
-                @Override
-                public void onResponse(final Call call, final Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        // Handle the error
-                        Log.d("sending", "un successful");
-                    } else {
-
-                        try {
-                            setFieldsFromJson(response);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-
-
-                        }
-                        Log.d("sending", String.valueOf(response));
-
-                    }
-
-
-                    // Upload successful
-                }
-            });
+//            client.newCall(request).enqueue(new Callback() {
+//
+//                @Override
+//                public void onFailure(final Call call, final IOException e) {
+//                    // Handle the error
+//                    Log.d("sending", String.valueOf(e));
+//
+//                }
+//
+//                @Override
+//                public void onResponse(final Call call, final Response response) throws IOException {
+//                    if (!response.isSuccessful()) {
+//                        // Handle the error
+//                        Log.d("sending", "un successful");
+//                    } else {
+//
+//                        Log.d("sending", String.valueOf(response));
+//
+//                    }
+//
+//
+//                    // Upload successful
+//                }
+//            });
             return "hello";
         }
 
@@ -207,6 +204,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
 
     private class submitValues extends AsyncTask<String, Integer, String> {
 
+        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
@@ -221,55 +219,15 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             String name = nameInput.getText().toString();
             String contact = contactInput.getText().toString();
 
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("height", height);
-                jsonObject.put("registration_id", regi_id);
-                jsonObject.put("weight", weight);
-                jsonObject.put("name", name);
-                jsonObject.put("contact", contact);
-                jsonObject.put("dob", dob);
+            HashMap<String, String> map = new HashMap<>();
+            map.put("dob", dob);
+            map.put("height", height);
+            map.put("weight", weight);
+            map.put("name", name);
+            map.put("contact", contact);
 
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            myDb.createOrUpdateMedicalProfile(regi_id, map);
 
-
-            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
-            RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // new
-            Log.d("tag=======", String.valueOf(body));
-
-            Request request = new Request.Builder().url(MEDICAL_PROFILE_URL) // The URL to send the data to
-                    .post(body)
-                    .build();
-            Log.d("tag=======", String.valueOf(request));
-
-
-            client.newCall(request).enqueue(new Callback() {
-
-                @Override
-                public void onFailure(final Call call, final IOException e) {
-                    // Handle the error
-                    Log.d("sending", String.valueOf(e));
-
-                }
-
-                @Override
-                public void onResponse(final Call call, final Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        // Handle the error
-                        Log.d("sending", "un successful");
-                    } else {
-                        Log.d("sending", " successful");
-                        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                                new MedicalProfileRegisterFragment2()).commit();
-                    }
-
-
-                    // Upload successful
-                }
-            });
             return "hello";
         }
 
