@@ -204,7 +204,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public MedicalProfileModel getMedicalProfile(String regi_id) {
         int id;
-        String selectQuery = "SELECT " + MedicalProfileModel.COL_ID + "  FROM " + MedicalProfileModel.TABLE_NAME + " WHERE " + MedicalProfileModel.COL_REGI_ID + "=" + regi_id;
+        String selectQuery = String.format("SELECT *  FROM " + MedicalProfileModel.TABLE_NAME + " WHERE " + MedicalProfileModel.COL_REGI_ID + "='%s'", regi_id);
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -258,8 +258,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (data.containsKey("has_eating_outside"))
             values.put(MedicalProfileModel.COL_HAS_EATING_OUTSIDE, data.get("has_eating_outside"));
 
+        Log.d("create", getMedicalProfile(regi_Id)  + " " + values);
         if(getMedicalProfile(regi_Id) != null){
-            db.update(MedicalProfileModel.TABLE_NAME, values, MedicalProfileModel.COL_REGI_ID + "=" + regi_Id, null);
+            db.update(MedicalProfileModel.TABLE_NAME, values, String.format(MedicalProfileModel.COL_REGI_ID + "= '%s'",   regi_Id), null);
 
         }else{
             db.insert(MedicalProfileModel.TABLE_NAME, null, values);
@@ -335,9 +336,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<ResultModel> results = new ArrayList<>();
 
         // Select All Query
-        String selectQuery = String.format("SELECT * FROM %s where datetime(%s) >=datetime('now', '-%d Hour') ORDER BY ASC;", ResultModel.TABLE_NAME, COL_TIMESTAMP, hours);
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') ORDER BY %s ASC LIMIT 48;", ResultModel.TABLE_NAME, COL_TIMESTAMP, hours, COL_TIMESTAMP);
 
-
+        Log.d("create___", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 

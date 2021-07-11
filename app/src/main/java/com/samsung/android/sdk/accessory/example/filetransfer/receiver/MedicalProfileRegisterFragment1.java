@@ -3,6 +3,7 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -46,6 +47,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 
 
 public class MedicalProfileRegisterFragment1 extends Fragment {
@@ -72,6 +74,9 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         nextBtn = (Button) getView().findViewById(R.id.nextButton);
 
         nameInput = (EditText) getView().findViewById(R.id.nameTextInput);
@@ -149,7 +154,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz";// myDb.get_profile().getRegi_id();
             JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
             try {
                 setFieldsFromJson(jsonObject);
@@ -208,7 +213,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz";// myDb.get_profile().getRegi_id();
             OkHttpClient client = new OkHttpClient();
 
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
@@ -227,7 +232,8 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             map.put("contact", contact);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
-
+            getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                    new MedicalProfileRegisterFragment2()).commit();
             return "hello";
         }
 

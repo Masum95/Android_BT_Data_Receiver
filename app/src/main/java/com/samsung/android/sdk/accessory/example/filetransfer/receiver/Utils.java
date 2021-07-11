@@ -49,7 +49,7 @@ public class Utils {
     public static JSONObject getMedicalProfileJson(Context context){
         final DatabaseHelper myDb = new DatabaseHelper(context);
 
-        String regi_id = myDb.get_profile().getRegi_id();
+        String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
         MedicalProfileModel profile = myDb.getMedicalProfile(regi_id);
 
         JSONObject jsonObject = new JSONObject();

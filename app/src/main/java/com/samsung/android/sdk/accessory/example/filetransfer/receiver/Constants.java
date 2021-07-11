@@ -21,6 +21,9 @@ public interface  Constants {
     String SERVER_SRC_KEYWORD = "SERVER";
     String WATCH_SRC_KEYWORD = "WATCH";
 
+
+    String SHARED_PREF_ID = "FileXferAppPreference";
+
     long  SCHEDULER_INTERVAL = 15 * 60 * 1000;
 
 

@@ -106,7 +106,7 @@ public class FileJobService extends JobService {
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
         myDb = new DatabaseHelper(this);
         phone_num = myDb.get_profile().getPhone_num();
-        regi_id = myDb.get_profile().getRegi_id();
+        regi_id = "xyz"; // myDb.get_profile().getRegi_id();
         mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
@@ -174,7 +174,7 @@ public class FileJobService extends JobService {
 
         @Override
         protected String doInBackground(String... params) {
-            String csvFileName = "_nf8VNRdtlCse1yloaZqM0ykXQA-001_1625845480";
+            String csvFileName = "_nf8VNRdtlCse1yloaZqM0ykXQA-001_1626025296";
             Log.d("tag", "before from python " + csvFileName);
             Python py = Python.getInstance();
             PyObject pyObject = py.getModule("model_runner");

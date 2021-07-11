@@ -142,7 +142,7 @@ public class FileTransferReceiverFragment extends Fragment {
         mCtxt = thisContext;
         myDb = new DatabaseHelper(thisContext);
 
-        String regi_id = myDb.get_profile().getRegi_id();
+        String regi_id = "xyz" ; // myDb.get_profile().getRegi_id();
 
         PACKAGE_NAME = thisContext.getPackageName();
 
@@ -156,7 +156,7 @@ public class FileTransferReceiverFragment extends Fragment {
 
         warningLayout.setVisibility(View.VISIBLE);
 
-        String mobile_num = myDb.get_profile().getPhone_num();
+        String mobile_num = "01521433"; // myDb.get_profile().getPhone_num();
         String name = myDb.getMedicalProfile(regi_id).getName();
         phone_numTextView.setText(mobile_num);
         nameTextView.setText(name);
@@ -170,14 +170,14 @@ public class FileTransferReceiverFragment extends Fragment {
         }
         if(maxHR != -1){
             upBpmTxtView.setText(String.valueOf(maxHR));
-        }else{
-            uparrowView.setVisibility(View.INVISIBLE);
+            uparrowView.setVisibility(View.VISIBLE);
+
         }
 
         if(minHr != 1000){
             downBpmTxtView.setText(String.valueOf(minHr));
-        }else{
-            downarrowView.setVisibility(View.INVISIBLE);
+            downarrowView.setVisibility(View.VISIBLE);
+
         }
 
         LineChartModule bar = new LineChartModule(thisContext, getActivity(), R.id.lineChart);

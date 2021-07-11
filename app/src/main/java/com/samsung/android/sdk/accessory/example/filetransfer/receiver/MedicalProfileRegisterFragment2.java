@@ -3,6 +3,7 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,9 +44,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 
 
 public class MedicalProfileRegisterFragment2 extends Fragment {
+    SharedPreferences prefs;
 
 
     private TextView mDisplayDate;
@@ -80,6 +83,10 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        prefs = getContext().getSharedPreferences(SHARED_PREF_ID, 0);
+        prefs.edit().putBoolean("HAS_MEDICAL_PROFILE_REGISTERED", true).apply();
+
         submitBtn = (Button) getView().findViewById(R.id.buttonSubmit);
 
         heightText = (EditText) getView().findViewById(R.id.height);
@@ -164,7 +171,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz";// myDb.get_profile().getRegi_id();
 
             JSONObject Jobject = Utils.getMedicalProfileJson(getContext());
 
@@ -197,7 +204,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
             String HD = getRadioValue(R.id.radioGroupHD);
             String parent_HD = getRadioValue(R.id.radioGroupPHD);
             String hyperTension = getRadioValue(R.id.radioGroupHT);
@@ -214,6 +221,8 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             map.put("has_eating_outside", eatingOutside);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
+            getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                    new FileTransferReceiverFragment()).commit();
             return "hello";
         }
 

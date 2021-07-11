@@ -6,7 +6,7 @@ from torch.nn import functional as F
 from models.deepbeat_bayesian import Bayesian_Deepbeat
 import math
 import json
-
+import random
 
 def sliding_window(x, w=800, o=400):
 	"""
@@ -74,4 +74,6 @@ def input_preprocessingTmp():
     :param csv_filepath // path where all csv files will be stored
     :return:
     """
-	return json.dumps({'predict_ara': '[1 0 0 1]', 'hear_rate_data': { 'activity': 'W', 'hr': '80.95' }})
+	randNum = random.randint(60, 100)
+
+	return json.dumps({'predict_ara': '[1 0 0 1]', 'hear_rate_data': { 'activity': 'W', 'hr': str(randNum) }})

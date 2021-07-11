@@ -31,6 +31,7 @@ import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_ID_URL;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -40,13 +41,12 @@ public class RegisterActivity extends AppCompatActivity {
     TextView login;
     boolean isNameValid, isEmailValid, isPasswordValid;
     TextInputLayout nameError, phone_num_error, emailError, phoneError, passError;
-    String sharedPrefId = "FileXferAppPreference";
     SharedPreferences prefs;
     boolean isCheckingFinished = false;
     boolean isPhoneValid = false;
 
     private void skipActivity(){
-        prefs = getSharedPreferences(sharedPrefId, 0);
+        prefs = getSharedPreferences(SHARED_PREF_ID, 0);
         boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
 
         if (isLoggedIn) {

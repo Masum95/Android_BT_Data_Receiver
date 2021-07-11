@@ -1,6 +1,7 @@
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import android.view.MenuItem;
@@ -14,14 +15,22 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawer;
+
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        prefs = getSharedPreferences(SHARED_PREF_ID, 0);
+        boolean has_medical_profile_registered = prefs.getBoolean("HAS_MEDICAL_PROFILE_REGISTERED", false);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -36,9 +45,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                    new FileTransferReceiverFragment()).commit();
-            navigationView.setCheckedItem(R.id.profile_registration);
+            if(!has_medical_profile_registered){
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                        new MedicalProfileRegisterFragment1()).commit();
+                navigationView.setCheckedItem(R.id.profile_registration);
+
+            }else{
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                        new FileTransferReceiverFragment()).commit();
+                navigationView.setCheckedItem(R.id.dashboard);
+            }
+
         }
     }
 

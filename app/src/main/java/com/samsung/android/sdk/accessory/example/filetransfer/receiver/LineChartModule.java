@@ -144,7 +144,7 @@ public class LineChartModule {
      */
     private LineData getLineData(int hours) {
 
-        List<ResultModel> resultList = myDb.getResults(hours);
+        List<ResultModel> resultList = myDb.getResultsOfNHours(hours);
         ArrayList<Entry> lineEntries = new ArrayList<Entry>();
 
         lineEntries = new ArrayList<Entry>();
@@ -152,11 +152,12 @@ public class LineChartModule {
         for (ResultModel result : resultList) {
             String timestamp = result.getTimestamp(); // id is column name in db
             double hr = result.getAvg_hr();
-            lineEntries.add(new Entry(Float.parseFloat(timestamp) + i*2000000, (float)hr + i* 5));
-            Log.d("hrs", new SimpleDateFormat("HH:mm").format(Float.parseFloat(timestamp) + i*2000000) + "  " + (hr + i* 5)  );
+            lineEntries.add(new Entry(Float.parseFloat(timestamp) + i*2000000, (float) hr));
+            Log.d("hrs", new SimpleDateFormat("HH:mm").format(Float.parseFloat(timestamp) + i*2000000) + "  " + (hr)  );
             i+= 1;
         }
-        xAxis.setLabelCount(i, true);
+        Log.d("create", String.valueOf(i));
+        xAxis.setLabelCount(15, true);
 
 
         LineDataSet lineDataSet = new LineDataSet(lineEntries, "Line1");
@@ -169,6 +170,7 @@ public class LineChartModule {
         lineDataSet.setCircleHoleRadius(3);
         lineDataSet.setDrawHighlightIndicators(true);
         lineDataSet.setHighLightColor(Color.RED);
+        lineDataSet.setDrawValues(false);
         lineDataSet.setValueTextSize(14);
         lineDataSet.setValueTextColor(Color.GREEN);
         lineDataSet.setColor(Color.rgb(0, 255, 255)); // LINE_COLOR
