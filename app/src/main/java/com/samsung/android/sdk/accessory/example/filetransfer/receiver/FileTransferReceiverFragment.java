@@ -129,7 +129,7 @@ public class FileTransferReceiverFragment extends Fragment {
             Log.d(TAG, "Service connected");
             mReceiverService = ((FileTransferReceiver.ReceiverBinder) binder).getService();
             mReceiverService.registerFileAction(getFileAction());
-            mServiceIntent = new Intent(thisContext, mReceiverService.getClass());
+//            mServiceIntent = new Intent(thisContext, mReceiverService.getClass());
 
         }
     };
@@ -245,8 +245,8 @@ public class FileTransferReceiverFragment extends Fragment {
         mServiceIntent.setClass(thisContext, Restarter.class);
         thisContext.sendBroadcast(mServiceIntent);
         new syncMedicalProfile().execute();
-//        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
-//                this.mServiceConnection, Context.BIND_AUTO_CREATE);
+        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
+                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 
@@ -510,7 +510,7 @@ public class FileTransferReceiverFragment extends Fragment {
                     public void run() {
 
                         try {
-                            String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"), mFilePath.length());
+                            String receiveFileName = mFilePath.substring(mFilePath.lastIndexOf("/"));
                             mReceiverService.receiveFile(mTransId, DEST_DIRECTORY
                                     + receiveFileName, true);
 

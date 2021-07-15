@@ -189,7 +189,7 @@ public class FileTransferReceiver extends SAAgent {
                             "sw",
                             0,
                             0);
-                    if(isInserted == true)
+                    if(isInserted )
                         Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
                     else
                         Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
@@ -219,31 +219,31 @@ public class FileTransferReceiver extends SAAgent {
                 thread.start();
 
 
-//                if (FileTransferReceiverActivity.isUp()) {
-//                    Log.d(TAG, "Activity is up");
-////                    mFileAction.onFileActionTransferRequested(id, fileName);
-//
-//                } else {
-//                    Log.d(TAG, "Activity is not up, invoke activity");
-//                    mContext.startActivity(new Intent()
-//                            .setClass(mContext, FileTransferReceiverActivity.class)
-//                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                            .setAction("incomingFT").putExtra("tx", id)
-//                            .putExtra("fileName", fileName));
-//                    int counter = 0;
-//                    while (counter < 10) {
-//                        counter++;
-//                        try {
-//                            Thread.sleep(500);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                        if (mFileAction != null) {
-////                            mFileAction.onFileActionTransferRequested(id, fileName);
-//                            break;
-//                        }
-//                    }
-//                }
+                if (FileTransferReceiverActivity.isUp()) {
+                    Log.d(TAG, "Activity is up");
+                    mFileAction.onFileActionTransferRequested(id, fileName);
+
+                } else {
+                    Log.d(TAG, "Activity is not up, invoke activity");
+                    mContext.startActivity(new Intent()
+                            .setClass(mContext, FileTransferReceiverActivity.class)
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            .setAction("incomingFT").putExtra("tx", id)
+                            .putExtra("fileName", fileName));
+                    int counter = 0;
+                    while (counter < 10) {
+                        counter++;
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if (mFileAction != null) {
+                            mFileAction.onFileActionTransferRequested(id, fileName);
+                            break;
+                        }
+                    }
+                }
             }
 
             @Override
