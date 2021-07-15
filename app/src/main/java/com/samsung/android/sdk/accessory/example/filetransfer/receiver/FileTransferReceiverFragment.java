@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,6 +37,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.tabs.TabItem;
+import com.google.android.material.tabs.TabLayout;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
@@ -95,6 +98,7 @@ public class FileTransferReceiverFragment extends Fragment {
 
     TextView phone_numTextView, nameTextView, upBpmTxtView, downBpmTxtView;
     ImageView downarrowView, uparrowView;
+    TabLayout tabLayout;
     private EditText GetValue;
 
     java.util.ArrayList<String> listItems;
@@ -153,7 +157,7 @@ public class FileTransferReceiverFragment extends Fragment {
         downBpmTxtView =  getView().findViewById(R.id.downBpm);
         downarrowView =  getView().findViewById(R.id.downarrow);
         uparrowView =  getView().findViewById(R.id.uparrow);
-
+        tabLayout =  getView().findViewById(R.id.tabLayout);
         warningLayout.setVisibility(View.VISIBLE);
 
         String mobile_num = "01521433"; // myDb.get_profile().getPhone_num();
@@ -307,7 +311,7 @@ public class FileTransferReceiverFragment extends Fragment {
         }
     }
 
-    private class StarterTask extends AsyncTask<String, Integer, String> {
+    private class  StarterTask extends AsyncTask<String, Integer, String> {
         @Override
         protected String doInBackground(String... params) {
 
@@ -504,6 +508,8 @@ public class FileTransferReceiverFragment extends Fragment {
             public void onFileActionTransferRequested(int id, String path) {
                 mFilePath = path;
                 mTransId = id;
+                tabLayout.setBackgroundColor(Color.parseColor("#90EE90"));
+                tabLayout.getTabAt(0).setText("Connected To Watch");
 
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

@@ -71,4 +71,12 @@ public class Utils {
         }
         return jsonObject;
     }
+
+    public static String getTimeStampFromFile(String fileName) {
+
+        String[] tmp = fileName.split("/");
+        tmp = tmp[tmp.length - 1].split("_");
+        String timestamp = tmp[tmp.length - 1].split("\\.")[0];
+        return timestamp;
+    }
 }

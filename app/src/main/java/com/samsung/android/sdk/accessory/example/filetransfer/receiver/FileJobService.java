@@ -58,6 +58,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SERVER_SRC_KEYWORD;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 
 public class FileJobService extends JobService {
     private static final String TAG = "ExampleJobService";
@@ -76,13 +77,7 @@ public class FileJobService extends JobService {
     String phone_num, regi_id;
 
 
-    private static String getTimeStampFromFile(String fileName) {
 
-        String[] tmp = fileName.split("/");
-        tmp = tmp[tmp.length - 1].split("_");
-        String timestamp = tmp[tmp.length - 1].split("\\.")[0];
-        return timestamp;
-    }
 
     private static List<Integer> convertStringToIntAra(String str) {
         String[] result = str.split("[ ,\\]\\[]");
@@ -145,7 +140,7 @@ public class FileJobService extends JobService {
                                     SERVER_SRC_KEYWORD, // SERVER_SRC_KEYWORD
                                     1,
                                     1);
-                            new ModelRunner().execute(filePath);
+                            new ModelRunner(context).execute(filePath);
 
                         }
                         Log.d("file_rcvd_here", String.valueOf(status) + " " + String.valueOf(reason));
@@ -158,9 +153,7 @@ public class FileJobService extends JobService {
             }
         };
 
-        for(int i=0; i<50;i++){
-            new ModelRunnerTmp().execute();
-        }
+
 
         registerReceiver(receiver, new IntentFilter(
                 DownloadManager.ACTION_DOWNLOAD_COMPLETE));
@@ -204,56 +197,56 @@ public class FileJobService extends JobService {
         }
     }
 
-    private class ModelRunner extends AsyncTask<String, Integer, String> {
-
-        @Override
-        protected String doInBackground(String... params) {
-            String csvFileName = params[0];
-            Log.d("tag", "before from python " + csvFileName);
-            Python py = Python.getInstance();
-            PyObject pyObject = py.getModule("model_runner");
-
-
-            try {
-                PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
-                Log.d("tag", "Result from python " + obj.toString());
-                String jsonString = obj.toString();
-                JSONObject jsonObject = new JSONObject(jsonString);
-                String predict_ara = jsonObject.getString("predict_ara");
-                JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
-                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
-                        hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
-                resultList.add(convertStringToIntAra(obj.toString()));
-                return obj.toString();
-
-            } catch (Exception e) {
-                Log.d("tag", String.valueOf(e));
-
-                return "";
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (result.isEmpty()) return;
-            super.onPostExecute(result);
-            download_count--;
-            String res = "";
-            if (download_count == 0) {
-                String title = "Your Heart Update";
-                Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
-                        .setSmallIcon(R.drawable.ic_medicine)
-                        .setContentTitle(title)
-                        .setContentText(resultList.toString())
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                        .build();
-                notificationManager.notify(2, notification);
-            }
-
-
-        }
-    }
+//    private class ModelRunner extends AsyncTask<String, Integer, String> {
+//
+//        @Override
+//        protected String doInBackground(String... params) {
+//            String csvFileName = params[0];
+//            Log.d("tag", "before from python " + csvFileName);
+//            Python py = Python.getInstance();
+//            PyObject pyObject = py.getModule("model_runner");
+//
+//
+//            try {
+//                PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
+//                Log.d("tag", "Result from python " + obj.toString());
+//                String jsonString = obj.toString();
+//                JSONObject jsonObject = new JSONObject(jsonString);
+//                String predict_ara = jsonObject.getString("predict_ara");
+//                JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
+//                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
+//                        hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
+//                resultList.add(convertStringToIntAra(obj.toString()));
+//                return obj.toString();
+//
+//            } catch (Exception e) {
+//                Log.d("tag", String.valueOf(e));
+//
+//                return "";
+//            }
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            if (result.isEmpty()) return;
+//            super.onPostExecute(result);
+//            download_count--;
+//            String res = "";
+//            if (download_count == 0) {
+//                String title = "Your Heart Update";
+//                Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
+//                        .setSmallIcon(R.drawable.ic_medicine)
+//                        .setContentTitle(title)
+//                        .setContentText(resultList.toString())
+//                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+//                        .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+//                        .build();
+//                notificationManager.notify(2, notification);
+//            }
+//
+//
+//        }
+//    }
 
 
     public class SendFileRecvAck extends AsyncTask<String, String, String> {
