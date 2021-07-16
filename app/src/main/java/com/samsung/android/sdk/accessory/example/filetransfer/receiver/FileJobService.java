@@ -158,7 +158,7 @@ public class FileJobService extends JobService {
         registerReceiver(receiver, new IntentFilter(
                 DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         new Downloader().execute();
-        new Uploader().execute();
+        new FileUploadToServer(mCtxt).execute();
 //
         return true;
     }
@@ -374,86 +374,6 @@ public class FileJobService extends JobService {
 
     }
 
-
-    private class Uploader extends AsyncTask<String, Integer, String> {
-
-        @Override
-        protected String doInBackground(String... params) {
-
-
-            final DatabaseHelper myDb = new DatabaseHelper(getApplicationContext());
-
-            Log.d("sending", "start here ");
-
-            List<FileModel> filesList = myDb.getUnuploadedFilePaths();
-            Log.d("sending", String.valueOf(filesList.size()));
-            Dispatcher dispatcher = new Dispatcher();
-            dispatcher.setMaxRequests(1);
-
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .dispatcher(dispatcher)
-                    .build();
-            String device_id = myDb.get_profile().getDevice_id();
-            int indx = 0;
-//            while(true){
-            for (FileModel file_details : filesList) {
-                try {
-                    final String path = file_details.getFileName();
-                    Log.d("sending", path);
-
-                    File file = new File(path);
-                    Log.d("sending", "in try ");
-
-                    RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                            .addFormDataPart("file", file.getName(),
-                                    RequestBody.create(file, MediaType.parse("text/csv")))
-                            .addFormDataPart("device_id", device_id)
-                            .addFormDataPart("timestamp", getTimeStampFromFile(path))
-                            .addFormDataPart("file_src", "MOBILE")
-
-                            .build();
-
-                    Request request = new Request.Builder()
-                            .url(FILE_UPLOAD_GET_URL)
-                            .post(requestBody)
-                            .build();
-
-                    client.newCall(request).enqueue(new Callback() {
-
-                        @Override
-                        public void onFailure(final Call call, final IOException e) {
-                            // Handle the error
-                            Log.d("sending", String.valueOf(e));
-
-                        }
-
-                        @Override
-                        public void onResponse(final Call call, final Response response) throws IOException {
-                            if (!response.isSuccessful()) {
-                                // Handle the error
-                                Log.d("sending", "un successful");
-                            } else {
-
-                                Log.d("sending", "successful -------->" + path);
-                                myDb.updateFileSendStatus(path);
-                            }
-
-
-                            // Upload successful
-                        }
-                    });
-
-                } catch (Exception ex) {
-                    // Handle the error
-                    Log.d("sending", " no file ");
-                }
-            }
-
-            return "ok";
-
-        }
-
-    }
 
 
     private void doBackgroundWork(final JobParameters params) {
