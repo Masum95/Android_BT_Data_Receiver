@@ -130,10 +130,9 @@ public class FileTransferReceiverFragment extends Fragment {
 
         @Override
         public void onServiceConnected(ComponentName arg0, IBinder binder) {
-            Log.d(TAG, "Service connected");
+            Log.d(TAG, "Service connected+++++++++++++++++");
             mReceiverService = ((FileTransferReceiver.ReceiverBinder) binder).getService();
             mReceiverService.registerFileAction(getFileAction());
-            mServiceIntent = new Intent(thisContext, mReceiverService.getClass());
 
         }
     };
@@ -249,8 +248,8 @@ public class FileTransferReceiverFragment extends Fragment {
         mServiceIntent.setClass(thisContext, Restarter.class);
         thisContext.sendBroadcast(mServiceIntent);
         new syncMedicalProfile().execute();
-//        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
-//                this.mServiceConnection, Context.BIND_AUTO_CREATE);
+        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
+                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 
