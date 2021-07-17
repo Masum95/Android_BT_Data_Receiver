@@ -65,7 +65,8 @@ def input_preprocessing(model_path, csv_filepath):
 	ppg = df[1].to_numpy()
 	# return ppg
 	# return df[1].to_numpy().shape
-	return json.dumps({'predict_ara': np.argmax(run_model(model_path, ppg), axis=1), 'hear_rate_data': { 'activity': 'W', 'hr': '80.95' }})
+	randNum = random.randint(60, 100)
+	return json.dumps({'predict_ara': np.argmax(run_model(model_path, ppg), axis=1), 'hear_rate_data': { 'activity': 'W', 'hr': str(randNum) }})
 
 
 def input_preprocessingTmp():

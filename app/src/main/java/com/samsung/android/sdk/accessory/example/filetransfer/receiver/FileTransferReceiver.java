@@ -61,7 +61,6 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 
 public class FileTransferReceiver extends SAAgent {
     private static final String TAG = "FileTransferReceiver";
-    private Context mContext;
     private final IBinder mReceiverBinder = new ReceiverBinder();
     private static final Class<ServiceConnection> SASOCKET_CLASS = ServiceConnection.class;
     private ServiceConnection mConnection = null;
@@ -169,7 +168,6 @@ public class FileTransferReceiver extends SAAgent {
             startForeground(1, new Notification());
 
 
-        mContext = getApplicationContext();
         Log.d(TAG, "On Create of Sample FileTransferReceiver Service");
         mCallback = new EventListener() {
             @Override
@@ -189,7 +187,9 @@ public class FileTransferReceiver extends SAAgent {
                             "sw",
                             0,
                             0);
-                    if(isInserted )
+                    new ModelRunner(mCtxt).execute(fileName);
+
+                    if(isInserted == true)
                         Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
                     else
                         Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
@@ -219,31 +219,31 @@ public class FileTransferReceiver extends SAAgent {
                 thread.start();
 
 
-                if (FileTransferReceiverActivity.isUp()) {
-                    Log.d(TAG, "Activity is up");
-                    mFileAction.onFileActionTransferRequested(id, fileName);
-
-                } else {
-                    Log.d(TAG, "Activity is not up, invoke activity");
-                    mContext.startActivity(new Intent()
-                            .setClass(mContext, FileTransferReceiverActivity.class)
-                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            .setAction("incomingFT").putExtra("tx", id)
-                            .putExtra("fileName", fileName));
-                    int counter = 0;
-                    while (counter < 10) {
-                        counter++;
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (mFileAction != null) {
-                            mFileAction.onFileActionTransferRequested(id, fileName);
-                            break;
-                        }
-                    }
-                }
+//                if (FileTransferReceiverActivity.isUp()) {
+//                    Log.d(TAG, "Activity is up");
+////                    mFileAction.onFileActionTransferRequested(id, fileName);
+//
+//                } else {
+//                    Log.d(TAG, "Activity is not up, invoke activity");
+//                    mCtxt.startActivity(new Intent()
+//                            .setClass(mCtxt, FileTransferReceiverActivity.class)
+//                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                            .setAction("incomingFT").putExtra("tx", id)
+//                            .putExtra("fileName", fileName));
+//                    int counter = 0;
+//                    while (counter < 10) {
+//                        counter++;
+//                        try {
+//                            Thread.sleep(500);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                        if (mFileAction != null) {
+////                            mFileAction.onFileActionTransferRequested(id, fileName);
+//                            break;
+//                        }
+//                    }
+//                }
             }
 
             @Override
