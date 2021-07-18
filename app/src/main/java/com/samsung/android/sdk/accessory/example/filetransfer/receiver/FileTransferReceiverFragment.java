@@ -227,9 +227,12 @@ public class FileTransferReceiverFragment extends Fragment {
 //                }
 //
 //                adapter.notifyDataSetChanged();
+//                getActivity().finish();
+//                startActivity(getActivity().getIntent());
                 getActivity().finish();
+                getActivity().overridePendingTransition(0, 0);
                 startActivity(getActivity().getIntent());
-
+                getActivity().overridePendingTransition(0, 0);
             }
         });
 //
