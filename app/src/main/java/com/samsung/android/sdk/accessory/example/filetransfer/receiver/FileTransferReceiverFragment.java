@@ -227,8 +227,8 @@ public class FileTransferReceiverFragment extends Fragment {
 //                }
 //
 //                adapter.notifyDataSetChanged();
-                LineChartModule bar = new LineChartModule(thisContext, getActivity(), R.id.lineChart);
-
+                getActivity().finish();
+                startActivity(getActivity().getIntent());
 
             }
         });

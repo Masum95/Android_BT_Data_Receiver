@@ -49,11 +49,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new MedicalProfileRegisterFragment1()).commit();
                 navigationView.setCheckedItem(R.id.profile_registration);
+                drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
             } else {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new FileTransferReceiverFragment()).commit();
                 navigationView.setCheckedItem(R.id.dashboard);
+                drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+
             }
 
         }
