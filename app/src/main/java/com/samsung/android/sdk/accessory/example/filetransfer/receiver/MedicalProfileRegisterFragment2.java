@@ -167,24 +167,37 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         return -1;
     }
 
+
+    void UpdateOnUi(JSONObject obj) {
+        class OneShotTask implements Runnable {
+            JSONObject Jobject;
+            OneShotTask(JSONObject s) { Jobject = s; }
+            public void run() {
+                try {
+                    setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
+                    setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
+                    setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
+                    setRadioValue("has_covid", Jobject.getString("has_covid"));
+                    setRadioValue("has_smoking", Jobject.getString("has_smoking"));
+                    setRadioValue("has_eating_outside", Jobject.getString("has_eating_outside"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        getActivity().runOnUiThread(new OneShotTask(obj));
+    }
+
     private class loadValues extends AsyncTask<String, Integer, String> {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
-
+            myDb.close();
             JSONObject Jobject = Utils.getMedicalProfileJson(getContext());
+            UpdateOnUi(Jobject);
 
-            try {
-                setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
-                setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
-                setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
-                setRadioValue("has_covid", Jobject.getString("has_covid"));
-                setRadioValue("has_smoking", Jobject.getString("has_smoking"));
-                setRadioValue("has_eating_outside", Jobject.getString("has_eating_outside"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+
 
             return "hello";
         }
@@ -221,6 +234,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             map.put("has_eating_outside", eatingOutside);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
+            myDb.close();
             getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     new FileTransferReceiverFragment()).commit();
             return "hello";

@@ -84,6 +84,7 @@ public class LineChartModule {
 
         LineData mLineData = getLineData(24);
         showChart(lineChart, mLineData, Color.rgb(255, 255, 255));
+        myDb.close();
     }
 
 
@@ -152,8 +153,8 @@ public class LineChartModule {
         for (ResultModel result : resultList) {
             String timestamp = result.getTimestamp(); // id is column name in db
             double hr = result.getAvg_hr();
-            lineEntries.add(new Entry(Float.parseFloat(timestamp) + i*2000000, (float) hr));
-            Log.d("hrs", new SimpleDateFormat("HH:mm").format(Float.parseFloat(timestamp) + i*2000000) + "  " + (hr)  );
+            lineEntries.add(new Entry(Float.parseFloat(timestamp) , (float) hr));
+            Log.d("hrs", new SimpleDateFormat("HH:mm").format(Float.parseFloat(timestamp)) + "  " + (hr)  );
             i+= 1;
         }
         Log.d("create", String.valueOf(i));

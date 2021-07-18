@@ -283,7 +283,6 @@ public class FileJobService extends JobService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             return "";
         }
 
@@ -383,7 +382,7 @@ public class FileJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         Log.d(TAG, "Job cancelled before completion");
         unregisterReceiver(receiver);
-
+        myDb.close();
         jobCancelled = true;
         return true;
     }

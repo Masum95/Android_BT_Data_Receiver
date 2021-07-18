@@ -51,7 +51,6 @@ public class Utils {
 
         String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
         MedicalProfileModel profile = myDb.getMedicalProfile(regi_id);
-
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("height", profile != null ?  profile.getHeight(): "");
@@ -69,6 +68,7 @@ public class Utils {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        myDb.close();
         return jsonObject;
     }
 

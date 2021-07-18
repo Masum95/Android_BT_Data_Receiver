@@ -76,7 +76,6 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         super.onCreate(savedInstanceState);
 
 
-
         nextBtn = (Button) getView().findViewById(R.id.nextButton);
 
         nameInput = (EditText) getView().findViewById(R.id.nameTextInput);
@@ -137,16 +136,29 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         return "";
     }
 
-    private void setFieldsFromJson(JSONObject Jobject) throws IOException, JSONException {
 
-        heightInput.setText(getValidValue(Jobject.getString("height")));
-        weightInput.setText(getValidValue(Jobject.getString("weight")));
-        nameInput.setText(getValidValue(Jobject.getString("name")));
-        contactInput.setText(getValidValue(Jobject.getString("contact")));
-        mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
+    void UpdateOnUi(JSONObject obj) {
+        class OneShotTask implements Runnable {
+            JSONObject Jobject;
 
+            OneShotTask(JSONObject s) {
+                Jobject = s;
+            }
+
+            public void run() {
+                try {
+                    heightInput.setText(getValidValue(Jobject.getString("height")));
+                    weightInput.setText(getValidValue(Jobject.getString("weight")));
+                    nameInput.setText(getValidValue(Jobject.getString("name")));
+                    contactInput.setText(getValidValue(Jobject.getString("contact")));
+                    mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        getActivity().runOnUiThread(new OneShotTask(obj));
     }
-
 
     private class loadValues extends AsyncTask<String, Integer, String> {
         OkHttpClient client = new OkHttpClient();
@@ -155,14 +167,10 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            myDb.close();
             JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
-            try {
-                setFieldsFromJson(jsonObject);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            UpdateOnUi(jsonObject);
+
 //            HttpUrl.Builder urlBuilder = HttpUrl.parse(MEDICAL_PROFILE_URL).newBuilder();
 //            urlBuilder.addQueryParameter("registration_id", regi_id);
 //            String url = urlBuilder.build().toString();
@@ -214,6 +222,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            myDb.close();
             OkHttpClient client = new OkHttpClient();
 
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
@@ -232,6 +241,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             map.put("contact", contact);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
+            myDb.close();
             getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     new MedicalProfileRegisterFragment2()).commit();
             return "hello";

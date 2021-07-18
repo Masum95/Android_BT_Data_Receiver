@@ -157,6 +157,7 @@ public class FileTransferReceiverFragment extends Fragment {
         downarrowView =  getView().findViewById(R.id.downarrow);
         uparrowView =  getView().findViewById(R.id.uparrow);
         tabLayout =  getView().findViewById(R.id.tabLayout);
+        reloadBtn =  getView().findViewById(R.id.reloadBtn);
         warningLayout.setVisibility(View.VISIBLE);
 
         String mobile_num = "01521433"; // myDb.get_profile().getPhone_num();
@@ -213,9 +214,9 @@ public class FileTransferReceiverFragment extends Fragment {
 //        buttonStop = (Button) getView().findViewById(R.id.buttonStop);
 
 
-//        reloadBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
+        reloadBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 //                List<ResultModel> resultList  = myDb.getResults(5);
 //                listItems.clear();
 //                listItems.add("Previous History");
@@ -226,9 +227,14 @@ public class FileTransferReceiverFragment extends Fragment {
 //                }
 //
 //                adapter.notifyDataSetChanged();
-//
-//            }
-//        });
+//                getActivity().finish();
+//                startActivity(getActivity().getIntent());
+                getActivity().finish();
+                getActivity().overridePendingTransition(0, 0);
+                startActivity(getActivity().getIntent());
+                getActivity().overridePendingTransition(0, 0);
+            }
+        });
 //
 //
 //        buttonStop.setOnClickListener(new View.OnClickListener() {
@@ -412,6 +418,7 @@ public class FileTransferReceiverFragment extends Fragment {
 //        mServiceIntent.setClass(this, Restarter.class);
 //        this.sendBroadcast(mServiceIntent);
         Log.d("activity", "in on stop ");
+        myDb.close();
         mIsUp = false;
         super.onStop();
     }
@@ -435,7 +442,7 @@ public class FileTransferReceiverFragment extends Fragment {
     public void onDestroy() {
 
         Log.d("activity", "in on destroy ");
-
+        myDb.close();
         mIsUp = false;
         super.onDestroy();
 
@@ -484,6 +491,8 @@ public class FileTransferReceiverFragment extends Fragment {
 
             @Override
             public void onFileActionProgress(final long progress) {
+                Log.d(TAG, "INSIDE XFER PROGRESS");
+
 //                runOnUiThread(new Runnable() {
 //                    @Override
 //                    public void run() {
@@ -494,9 +503,20 @@ public class FileTransferReceiverFragment extends Fragment {
 
             @Override
             public void onFileActionTransferComplete(final String fileName) {
+                Log.d(TAG, "INSIDE XFER COMPLETE");
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        boolean isInserted = myDb.insertFileInfo(fileName,
+                                "sw",
+                                0,
+                                0);
+                        new ModelRunner(mCtxt).execute(fileName);
+
+                        if(isInserted == true)
+                            Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
+                        else
+                            Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
 
 
                     }
@@ -505,6 +525,8 @@ public class FileTransferReceiverFragment extends Fragment {
 
             @Override
             public void onFileActionTransferRequested(int id, String path) {
+                Log.d(TAG, "INSIDE XFER REQUESTED");
+
                 mFilePath = path;
                 mTransId = id;
                 tabLayout.setBackgroundColor(Color.parseColor("#90EE90"));

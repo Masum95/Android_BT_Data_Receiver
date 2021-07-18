@@ -11,6 +11,10 @@
             android:id="@+id/dashboard"
             android:icon="@drawable/ic_baseline_dashboard_24"
             android:title="Dashboard" />
+        <item
+            android:id="@+id/records"
+            android:icon="@drawable/ic_baseline_dashboard_24"
+            android:title="Records" />
 <!--        <item-->
 <!--            android:id="@+id/nav_profile"-->
 <!--            android:icon="@drawable/ic_medicine"-->

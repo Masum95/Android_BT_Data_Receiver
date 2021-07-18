@@ -68,15 +68,20 @@ public class RegisterActivity extends AppCompatActivity {
             register.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (is_client_side_valid()) {
-                        // redirect to LoginActivity
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent);
+                    finish();
 
-                        new serverValidation().execute();
-
-                    }
+//                    if (is_client_side_valid()) {
+//                        // redirect to LoginActivity
+//
+//                        new serverValidation().execute();
+//
+//                    }
 
                 }
             });
+            myDb.close();
         }
     }
 
@@ -140,6 +145,7 @@ public class RegisterActivity extends AppCompatActivity {
                             Log.d("json_response_eror", String.valueOf(error));
                         }
                     });
+            myDb.close();
             return "hello";
         }
 
