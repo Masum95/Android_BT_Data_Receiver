@@ -7,6 +7,7 @@ import java.io.File;
 public interface  Constants {
     String PKG_FOLDER_NAME = "BayesBeat/";
     String CSV_FILE_DIR = Environment.getExternalStorageDirectory() + File.separator + PKG_FOLDER_NAME + "csvFiles/";
+    String RECORD_FILE_DIR = Environment.getExternalStorageDirectory() + File.separator + PKG_FOLDER_NAME + "records/";
     String MODEL_FILE_DIR = Environment.getExternalStorageDirectory() + File.separator + PKG_FOLDER_NAME + "model/";
     String DEST_DIRECTORY = CSV_FILE_DIR;
     String MODEL_NAME = "bayesbeat_cpu.pt";
@@ -17,6 +18,7 @@ public interface  Constants {
     String FILE_RCV_ACK_URL = BASE_URL + "file/ack/";
     String WATCH_ID_URL = BASE_URL + "file/watch_id/";
     String MEDICAL_PROFILE_URL = BASE_URL + "file/medical_profile/";
+    String PDF_GENERATE_URL = BASE_URL + "file/pdf/";
 
     String SERVER_SRC_KEYWORD = "SERVER";
     String WATCH_SRC_KEYWORD = "WATCH";

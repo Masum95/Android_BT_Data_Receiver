@@ -155,6 +155,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            myDb.close();
             JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
             try {
                 setFieldsFromJson(jsonObject);
@@ -214,6 +215,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            myDb.close();
             OkHttpClient client = new OkHttpClient();
 
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
@@ -232,6 +234,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             map.put("contact", contact);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
+            myDb.close();
             getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     new MedicalProfileRegisterFragment2()).commit();
             return "hello";

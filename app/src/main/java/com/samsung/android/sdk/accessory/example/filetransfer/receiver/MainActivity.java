@@ -45,12 +45,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
         if (savedInstanceState == null) {
-            if(!has_medical_profile_registered){
+            if (!has_medical_profile_registered) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new MedicalProfileRegisterFragment1()).commit();
                 navigationView.setCheckedItem(R.id.profile_registration);
 
-            }else{
+            } else {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new FileTransferReceiverFragment()).commit();
                 navigationView.setCheckedItem(R.id.dashboard);
@@ -70,6 +70,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new FileTransferReceiverFragment()).commit();
+
+                break;
+            case R.id.records:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                        new ExportPdfFragment()).commit();
 
                 break;
 

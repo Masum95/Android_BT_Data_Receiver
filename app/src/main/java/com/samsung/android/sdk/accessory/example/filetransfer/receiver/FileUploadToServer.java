@@ -111,7 +111,7 @@ public class FileUploadToServer extends AsyncTask<String, Integer, String> {
                 Log.d("sending", " no file ");
             }
         }
-
+        myDb.close();
         return "ok";
 
     }

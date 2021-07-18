@@ -249,6 +249,7 @@ public class ProfileRegisterActivity extends AppCompatActivity  {
                     // Upload successful
                 }
             });
+            myDb.close();
             return "hello";
         }
 

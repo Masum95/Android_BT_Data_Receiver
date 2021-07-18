@@ -197,6 +197,7 @@ public class MedicalProfileRegisterFragment extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
+            myDb.close();
             OkHttpClient client = new OkHttpClient();
             String gender = getGender();
             String blood_group = getBG();

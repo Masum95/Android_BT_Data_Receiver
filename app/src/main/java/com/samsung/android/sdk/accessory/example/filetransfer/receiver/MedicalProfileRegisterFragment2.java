@@ -172,7 +172,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
-
+            myDb.close();
             JSONObject Jobject = Utils.getMedicalProfileJson(getContext());
 
             try {
@@ -221,6 +221,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             map.put("has_eating_outside", eatingOutside);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
+            myDb.close();
             getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     new FileTransferReceiverFragment()).commit();
             return "hello";

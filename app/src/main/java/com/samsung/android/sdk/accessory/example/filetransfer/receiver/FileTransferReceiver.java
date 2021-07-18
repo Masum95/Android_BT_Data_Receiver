@@ -290,7 +290,7 @@ public class FileTransferReceiver extends SAAgent {
     @Override
     public void onDestroy() {
         isRunning = false;
-
+        myDb.close();
         try{
             mSAFileTransfer.close();
         }catch (Exception e1) {
