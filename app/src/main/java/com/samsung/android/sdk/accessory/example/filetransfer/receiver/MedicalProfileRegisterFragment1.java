@@ -76,7 +76,6 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         super.onCreate(savedInstanceState);
 
 
-
         nextBtn = (Button) getView().findViewById(R.id.nextButton);
 
         nameInput = (EditText) getView().findViewById(R.id.nameTextInput);
@@ -137,16 +136,29 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         return "";
     }
 
-    private void setFieldsFromJson(JSONObject Jobject) throws IOException, JSONException {
 
-        heightInput.setText(getValidValue(Jobject.getString("height")));
-        weightInput.setText(getValidValue(Jobject.getString("weight")));
-        nameInput.setText(getValidValue(Jobject.getString("name")));
-        contactInput.setText(getValidValue(Jobject.getString("contact")));
-        mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
+    void UpdateOnUi(JSONObject obj) {
+        class OneShotTask implements Runnable {
+            JSONObject Jobject;
 
+            OneShotTask(JSONObject s) {
+                Jobject = s;
+            }
+
+            public void run() {
+                try {
+                    heightInput.setText(getValidValue(Jobject.getString("height")));
+                    weightInput.setText(getValidValue(Jobject.getString("weight")));
+                    nameInput.setText(getValidValue(Jobject.getString("name")));
+                    contactInput.setText(getValidValue(Jobject.getString("contact")));
+                    mDisplayDate.setText(getValidValue(Jobject.getString("dob")));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        getActivity().runOnUiThread(new OneShotTask(obj));
     }
-
 
     private class loadValues extends AsyncTask<String, Integer, String> {
         OkHttpClient client = new OkHttpClient();
@@ -157,13 +169,8 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             String regi_id = "xyz";// myDb.get_profile().getRegi_id();
             myDb.close();
             JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
-            try {
-                setFieldsFromJson(jsonObject);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            UpdateOnUi(jsonObject);
+
 //            HttpUrl.Builder urlBuilder = HttpUrl.parse(MEDICAL_PROFILE_URL).newBuilder();
 //            urlBuilder.addQueryParameter("registration_id", regi_id);
 //            String url = urlBuilder.build().toString();
