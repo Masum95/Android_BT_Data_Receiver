@@ -157,6 +157,7 @@ public class FileTransferReceiverFragment extends Fragment {
         downarrowView =  getView().findViewById(R.id.downarrow);
         uparrowView =  getView().findViewById(R.id.uparrow);
         tabLayout =  getView().findViewById(R.id.tabLayout);
+        reloadBtn =  getView().findViewById(R.id.reloadBtn);
         warningLayout.setVisibility(View.VISIBLE);
 
         String mobile_num = "01521433"; // myDb.get_profile().getPhone_num();
