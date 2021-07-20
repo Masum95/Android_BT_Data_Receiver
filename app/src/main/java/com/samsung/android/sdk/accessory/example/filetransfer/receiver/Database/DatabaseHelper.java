@@ -26,6 +26,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_FILE_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_IS_UPLOADED;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_SRC;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.FileModel.COL_UPLOAD_TIME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel.COL_HEIGHT;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_DEVICE_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ProfileModel.COL_PHONE_NUM;
@@ -125,7 +126,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 FileModel file = new FileModel();
                 file.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
                 file.setSrc(cursor.getString(cursor.getColumnIndex(COL_SRC)));
-                file.setUploadedAt(cursor.getString(cursor.getColumnIndex(FileModel.COL_UPLOAD_TIME)));
+                file.setUploadedAt(cursor.getString(cursor.getColumnIndex(COL_UPLOAD_TIME)));
                 file.setIsUploaded(cursor.getInt(cursor.getColumnIndex(COL_IS_UPLOADED)));
                 file.setResultGen(cursor.getInt(cursor.getColumnIndex(FileModel.COL_RESULT_GEN)));
 
@@ -154,7 +155,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 FileModel file = new FileModel();
                 file.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
                 file.setSrc(cursor.getString(cursor.getColumnIndex(COL_SRC)));
-                file.setUploadedAt(cursor.getString(cursor.getColumnIndex(FileModel.COL_UPLOAD_TIME)));
+                file.setUploadedAt(cursor.getString(cursor.getColumnIndex(COL_UPLOAD_TIME)));
                 file.setIsUploaded(cursor.getInt(cursor.getColumnIndex(COL_IS_UPLOADED)));
                 file.setResultGen(cursor.getInt(cursor.getColumnIndex(FileModel.COL_RESULT_GEN)));
 
@@ -329,6 +330,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // return notes list
         return results;
+    }
+
+    public int getCountOfLastNMin(Integer... args) {
+        int mins = args.length > 0 ? args[0] : 30;
+
+        String selectQuery = String.format("SELECT * FROM %s where %s >=datetime('now', '-%d minutes') ORDER BY %s ASC LIMIT 48;", FileModel.TABLE_NAME,  COL_UPLOAD_TIME,  mins, COL_TIMESTAMP);
+        Log.d("create___", selectQuery);
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        int count = cursor.getCount();
+        cursor.close();
+        return count;
     }
 
     public List<ResultModel> getResultsOfNHours(Integer... args) {
