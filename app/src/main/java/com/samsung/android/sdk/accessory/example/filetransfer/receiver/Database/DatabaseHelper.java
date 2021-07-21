@@ -335,7 +335,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public int getCountOfLastNMin(Integer... args) {
         int mins = args.length > 0 ? args[0] : 30;
 
-        String selectQuery = String.format("SELECT * FROM %s where %s >=datetime('now', '-%d minutes') ORDER BY %s ASC LIMIT 48;", FileModel.TABLE_NAME,  COL_UPLOAD_TIME,  mins, COL_TIMESTAMP);
+        String selectQuery = String.format("SELECT * FROM %s where %s >=datetime('now', '-%d minutes') ORDER BY %s ASC LIMIT 48;", FileModel.TABLE_NAME,  COL_UPLOAD_TIME,  mins, COL_UPLOAD_TIME);
         Log.d("create___", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);

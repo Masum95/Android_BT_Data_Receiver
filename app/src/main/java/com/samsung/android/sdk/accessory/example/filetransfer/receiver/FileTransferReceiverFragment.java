@@ -147,6 +147,7 @@ public class FileTransferReceiverFragment extends Fragment {
         mIsUp = true;
         mCtxt = thisContext;
         myDb = new DatabaseHelper(thisContext);
+        prefs = getContext().getSharedPreferences(SHARED_PREF_ID, 0);
 
         boolean is_device_connected = prefs.getBoolean("IS_DEVICE_CONNECTED", false);
 

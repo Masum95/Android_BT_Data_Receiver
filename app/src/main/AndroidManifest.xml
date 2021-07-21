@@ -52,7 +52,7 @@
 
         <activity
             android:name=".RegisterActivity"
-            android:label="FileTransferReceiver"
+            android:label="BayesBeat"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:noHistory="true"
