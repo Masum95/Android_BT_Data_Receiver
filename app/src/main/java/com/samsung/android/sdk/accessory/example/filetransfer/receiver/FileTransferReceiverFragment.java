@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -66,6 +67,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 
 
 public class FileTransferReceiverFragment extends Fragment {
@@ -136,6 +138,7 @@ public class FileTransferReceiverFragment extends Fragment {
 
         }
     };
+    SharedPreferences prefs;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -144,6 +147,16 @@ public class FileTransferReceiverFragment extends Fragment {
         mIsUp = true;
         mCtxt = thisContext;
         myDb = new DatabaseHelper(thisContext);
+
+        boolean is_device_connected = prefs.getBoolean("IS_DEVICE_CONNECTED", false);
+
+        prefs = mCtxt.getSharedPreferences(SHARED_PREF_ID, 0);
+        int fileCount = myDb.getCountOfLastNMin(30);
+        if(fileCount == 0) {
+            prefs.edit().putBoolean("IS_DEVICE_CONNECTED", false).apply();
+        }
+
+
 
         String regi_id = "xyz" ; // myDb.get_profile().getRegi_id();
 
@@ -182,6 +195,12 @@ public class FileTransferReceiverFragment extends Fragment {
             downBpmTxtView.setText(String.valueOf(minHr));
             downarrowView.setVisibility(View.VISIBLE);
 
+        }
+
+
+        if(is_device_connected){
+            tabLayout.setSelectedTabIndicatorColor(Color.parseColor("#90EE90"));
+            tabLayout.getTabAt(0).setText("Receiving File");
         }
 
         LineChartModule bar = new LineChartModule(thisContext, getActivity(), R.id.lineChart);
@@ -254,8 +273,8 @@ public class FileTransferReceiverFragment extends Fragment {
         mServiceIntent.setClass(thisContext, Restarter.class);
         thisContext.sendBroadcast(mServiceIntent);
         new syncMedicalProfile().execute();
-        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
-                this.mServiceConnection, Context.BIND_AUTO_CREATE);
+//        mCtxt.bindService(new Intent(thisContext, FileTransferReceiver.class),
+//                this.mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 

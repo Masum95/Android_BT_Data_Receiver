@@ -30,6 +30,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Binder;
 import android.os.Build;
@@ -58,6 +59,7 @@ import androidx.annotation.NonNull;
 import java.io.UnsupportedEncodingException;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 
 public class FileTransferReceiver extends SAAgent {
     private static final String TAG = "FileTransferReceiver";
@@ -153,6 +155,7 @@ public class FileTransferReceiver extends SAAgent {
     public FileTransferReceiver() {
         super(TAG, SASOCKET_CLASS);
     }
+    SharedPreferences prefs;
 
 
     @Override
@@ -160,6 +163,7 @@ public class FileTransferReceiver extends SAAgent {
         super.onCreate();
         myDb = new DatabaseHelper(this);
         mCtxt = getApplicationContext();
+        prefs = mCtxt.getSharedPreferences(SHARED_PREF_ID, 0);
 
         isRunning = true;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
@@ -182,7 +186,7 @@ public class FileTransferReceiver extends SAAgent {
             public void onTransferCompleted(int transId, String fileName, int errorCode) {
                 Log.d(TAG, "onTransferCompleted: tr id : " + transId + " file name : " + fileName + " error : "
                         + errorCode);
-                if (errorCode != SAFileTransfer.ERROR_NONE) {
+//                if (errorCode != SAFileTransfer.ERROR_NONE) {
                     boolean isInserted = myDb.insertFileInfo(fileName,
                             "sw",
                             0,
@@ -195,12 +199,13 @@ public class FileTransferReceiver extends SAAgent {
                         Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
 
 //                    mFileAction.onFileActionTransferComplete(fileName);
-                }
+//                }
             }
 
             @Override
             public void onTransferRequested(final int id, final String fileName) {
                 Log.d(TAG, "onTransferRequested: id- " + id + " file name: " + fileName);
+                prefs.edit().putBoolean("IS_DEVICE_CONNECTED", true).apply();
 
                 Thread thread = new Thread() {
                     @Override
