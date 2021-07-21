@@ -8,6 +8,13 @@ import math
 import json
 import random
 
+import heartpy as hp
+import matplotlib.pyplot as plt
+from scipy.signal import resample
+import sys
+from sklearn.preprocessing import scale
+from sklearn.preprocessing import minmax_scale
+
 '''def sliding_window(x, w=800, o=400):
 	"""
     x: 1D numpy array
@@ -170,7 +177,7 @@ def preprocess_bayesbeat(raw, sample_rate=10, plot=False):
     return final_output, layer6_output, new_freq
 
 
-def run_model(model_path, ppg_signals):
+'''def run_model(model_path, ppg_signals):
 	ppg = ppg_signals
 	ppg = (ppg-ppg.min())/(ppg.max()-ppg.min())
 
@@ -187,7 +194,7 @@ def run_model(model_path, ppg_signals):
 		outputs, _ = model(batches)
 		outputs = F.log_softmax(outputs, dim=1)
 		outputs = torch.exp(outputs)
-	return outputs.numpy()
+	return outputs.numpy()'''
 
 def run_model_new(model_path, final_tens):
     model = Bayesian_Deepbeat()
