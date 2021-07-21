@@ -210,22 +210,19 @@ def run_model_new(model_path, final_tens):
 # reading csv file
 # 0-NonAF, 1-AF
 def input_preprocessing(model_path, csv_filepath):
-	"""
-    Following program takes csv_directory as input, does necessary operations and then outputs another csv in same directory.
-    :param csv_filepath // path where all csv files will be stored
-    :return:
-    """
 
-	df = pd.read_csv(csv_filepath, engine='python', header=None)
-	'''df = df[df[0]>40]
-	ppg = df[1].to_numpy()'''
-	raw = df.values[:, 1]
+#    Following program takes csv_directory as input, does necessary operations and then outputs another csv in same directory.
+#    :param csv_filepath // path where all csv files will be stored
+#    :return:
+
+    df = pd.read_csv(csv_filepath, engine='python', header=None)
+    raw = df.values[:, 1]
     final_output, layer6_output, new_freq = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
-    final_tens = torch.Tensor(final_output).to(device).view(-1, 1, 800)
-	# return ppg
-	# return df[1].to_numpy().shape
-	randNum = random.randint(60, 100)
-	return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1), 'hear_rate_data': { 'activity': 'W', 'hr': str(randNum) }})
+    final_tens = torch.Tensor(final_output).view(-1, 1, 800)
+# return ppg
+# return df[1].to_numpy().shape
+    randNum = random.randint(60, 100)
+    return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1), 'hear_rate_data': { 'activity': 'W', 'hr': str(randNum) }})
 
 
 def input_preprocessingTmp():
