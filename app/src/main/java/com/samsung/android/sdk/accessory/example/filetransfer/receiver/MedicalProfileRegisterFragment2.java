@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
@@ -86,6 +87,8 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
 
         prefs = getContext().getSharedPreferences(SHARED_PREF_ID, 0);
         prefs.edit().putBoolean("HAS_MEDICAL_PROFILE_REGISTERED", true).apply();
+        ((MainActivity)getActivity()).setDrawerUnlocked();
+        Log.d("tag--------", String.valueOf(prefs));
 
         submitBtn = (Button) getView().findViewById(R.id.buttonSubmit);
 
@@ -97,7 +100,6 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         setRadioTextToButtonMapping();
 
         new loadValues().execute();
-
         submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -192,7 +194,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            String regi_id = myDb.get_profile().getRegi_id();
             myDb.close();
             JSONObject Jobject = Utils.getMedicalProfileJson(getContext());
             UpdateOnUi(Jobject);
@@ -217,7 +219,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
+            String regi_id = myDb.get_profile().getRegi_id();
             String HD = getRadioValue(R.id.radioGroupHD);
             String parent_HD = getRadioValue(R.id.radioGroupPHD);
             String hyperTension = getRadioValue(R.id.radioGroupHT);

@@ -161,12 +161,11 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
     }
 
     private class loadValues extends AsyncTask<String, Integer, String> {
-        OkHttpClient client = new OkHttpClient();
 
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            String regi_id = myDb.get_profile().getRegi_id();
             myDb.close();
             JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
             UpdateOnUi(jsonObject);
@@ -221,9 +220,8 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = "xyz";// myDb.get_profile().getRegi_id();
+            String regi_id = myDb.get_profile().getRegi_id();
             myDb.close();
-            OkHttpClient client = new OkHttpClient();
 
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
 

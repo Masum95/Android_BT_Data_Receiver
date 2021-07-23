@@ -4,6 +4,8 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 
 import java.text.SimpleDateFormat;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getBdTimeFromUnixTimeStamp;
+
 public class LineChartXAxisValueFormatter extends IndexAxisValueFormatter {
 
     @Override
@@ -12,9 +14,7 @@ public class LineChartXAxisValueFormatter extends IndexAxisValueFormatter {
         // Convert float value to date string
         // Convert from seconds back to milliseconds to format time  to show to the user
 
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-        String dateString = sdf.format(value);
 
-        return dateString;
+        return getBdTimeFromUnixTimeStamp(Integer.toString((int)Math.round(value)));
     }
 }

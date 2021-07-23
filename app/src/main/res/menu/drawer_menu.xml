@@ -6,15 +6,20 @@
         <item
             android:id="@+id/profile_registration"
             android:icon="@drawable/ic_baseline_person_outline_24"
-            android:title="Profile Registration" />
+            android:title="Medical Profile Info" />
         <item
             android:id="@+id/dashboard"
             android:icon="@drawable/ic_baseline_dashboard_24"
             android:title="Dashboard" />
         <item
             android:id="@+id/records"
-            android:icon="@drawable/ic_baseline_dashboard_24"
-            android:title="Records" />
+            android:icon="@drawable/ic_baseline_picture_as_pdf_24"
+            android:title="Patient History" />
+        <item
+            android:id="@+id/file_recv_record"
+            android:icon="@drawable/ic_baseline_sync_alt_24"
+            android:title="File Recieve Records" />
+
 <!--        <item-->
 <!--            android:id="@+id/nav_profile"-->
 <!--            android:icon="@drawable/ic_medicine"-->

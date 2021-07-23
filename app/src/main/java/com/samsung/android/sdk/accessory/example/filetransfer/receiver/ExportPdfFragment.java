@@ -5,11 +5,14 @@ import android.app.DatePickerDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,6 +63,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.PDF_GENERATE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.RECORD_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.haveNetworkConnection;
 
 
 public class ExportPdfFragment extends Fragment {
@@ -99,6 +103,7 @@ public class ExportPdfFragment extends Fragment {
         fromDateInput = (TextView) getView().findViewById(R.id.fromDateRecord);
         toDateInput = (TextView) getView().findViewById(R.id.toDateRecord);
 
+        new FileUploadToServer(thisContext).execute();
 
         Log.d("register", "here");
 
@@ -109,7 +114,9 @@ public class ExportPdfFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-
+                if(!haveNetworkConnection(thisContext)){
+                    Toast.makeText(thisContext,"Something Went Wrong.\nPlease Check Your Internet Connection",Toast.LENGTH_LONG).show();
+                }
                 new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
 
                 Toast.makeText(thisContext, "Record is being Downloded.\n You Will be Notified once downloaed", Toast.LENGTH_SHORT).show();
@@ -139,7 +146,7 @@ public class ExportPdfFragment extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
+            String regi_id = myDb.get_profile().getRegi_id();
             myDb.close();
             String recordType = getRadioValue(R.id.recordsTypeRadioGroup);
 
@@ -157,12 +164,14 @@ public class ExportPdfFragment extends Fragment {
 
 
             DownloadManager.Request request = new DownloadManager.Request(builtUri);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "record.pdf");
+
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-            request.setTitle("CSV File");
+            request.setTitle("Record File");
             request.setDescription("Downloading");
             request.setVisibleInDownloadsUi(true);
-            request.setDestinationUri(Uri.parse("file://" + RECORD_FILE_DIR +"record.pdf" ));
+//            request.setDestinationUri(Uri.parse("file://" + RECORD_FILE_DIR +"record.pdf" ));
             Log.d("downloading", String.valueOf(request));
             downloadmanager.enqueue(request);
 

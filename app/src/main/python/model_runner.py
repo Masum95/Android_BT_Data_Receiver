@@ -204,7 +204,15 @@ def run_model_new(model_path, final_tens):
     	outputs, _ = model(final_tens)
     	#outputs = F.log_softmax(outputs, dim=1)
     	#outputs = torch.exp(outputs)
-    return outputs[0].numpy()
+    return outputs.numpy()
+
+
+def avg_hr_activity(df):
+    """
+    average of valid hrs and most frequent activity
+    """
+    df = df.loc[(10 <= df[0] ) & (df[0] <= 250)]
+    return df[0].mean(), df[13].value_counts()[:1].index[0]
 
 
 # reading csv file
@@ -219,10 +227,9 @@ def input_preprocessing(model_path, csv_filepath):
     raw = df.values[:, 1]
     final_output, layer6_output, new_freq = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
     final_tens = torch.Tensor(final_output).view(-1, 1, 800)
-# return ppg
-# return df[1].to_numpy().shape
-    randNum = random.randint(60, 100)
-    return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1), 'hear_rate_data': { 'activity': 'W', 'hr': str(randNum) }})
+
+    (hr, activity) = avg_hr_activity(df)
+    return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1).tolist(), 'hear_rate_data': { 'activity': activity, 'hr': hr }})
 
 
 def input_preprocessingTmp():

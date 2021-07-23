@@ -4,6 +4,7 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import android.util.Log;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
@@ -14,6 +15,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.FileRecvRecord.FileRecvRecordFragment;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 
@@ -22,7 +24,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer;
 
     SharedPreferences prefs;
-
+    public void setDrawerUnlocked(){
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
         if (savedInstanceState == null) {
+            Log.d("tag--=====_------",prefs.getBoolean("HAS_MEDICAL_PROFILE_REGISTERED", true) +" "+  String.valueOf(has_medical_profile_registered));
             if (!has_medical_profile_registered) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new MedicalProfileRegisterFragment1()).commit();
@@ -55,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new FileTransferReceiverFragment()).commit();
                 navigationView.setCheckedItem(R.id.dashboard);
-                drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
 
             }
 
@@ -78,6 +82,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.records:
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new ExportPdfFragment()).commit();
+
+                break;
+            case R.id.file_recv_record:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                        new FileRecvRecordFragment()).commit();
 
                 break;
 

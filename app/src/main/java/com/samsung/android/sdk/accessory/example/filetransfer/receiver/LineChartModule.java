@@ -30,6 +30,8 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getBdTimeFromUnixTimeStamp;
+
 
 public class LineChartModule {
 
@@ -81,10 +83,10 @@ public class LineChartModule {
 //            yAxis.setAxisMinimum(-50f);
         }
 
+        Log.d("create", "hre");
 
         LineData mLineData = getLineData(24);
         showChart(lineChart, mLineData, Color.rgb(255, 255, 255));
-        myDb.close();
     }
 
 
@@ -154,7 +156,7 @@ public class LineChartModule {
             String timestamp = result.getTimestamp(); // id is column name in db
             double hr = result.getAvg_hr();
             lineEntries.add(new Entry(Float.parseFloat(timestamp) , (float) hr));
-            Log.d("hrs", new SimpleDateFormat("HH:mm").format(Float.parseFloat(timestamp)) + "  " + (hr)  );
+            Log.d("hrs", timestamp + "  " +getBdTimeFromUnixTimeStamp(timestamp) + "  " + (hr)  );
             i+= 1;
         }
         Log.d("create", String.valueOf(i));
@@ -179,6 +181,7 @@ public class LineChartModule {
 
         // create a data object with the datasets
         LineData lineData = new LineData(lineDataSet);
+        myDb.close();
 
         return lineData;
     }

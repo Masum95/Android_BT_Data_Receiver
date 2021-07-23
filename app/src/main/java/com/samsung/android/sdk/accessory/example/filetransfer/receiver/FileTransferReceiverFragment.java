@@ -68,6 +68,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 
 
 public class FileTransferReceiverFragment extends Fragment {
@@ -152,14 +153,14 @@ public class FileTransferReceiverFragment extends Fragment {
         boolean is_device_connected = prefs.getBoolean("IS_DEVICE_CONNECTED", false);
 
         prefs = mCtxt.getSharedPreferences(SHARED_PREF_ID, 0);
-        int fileCount = myDb.getCountOfLastNMin(30);
+        int fileCount = myDb.getCountOfUploadedFilesLastNMin(30);
         if(fileCount == 0) {
             prefs.edit().putBoolean("IS_DEVICE_CONNECTED", false).apply();
         }
 
 
 
-        String regi_id = "xyz" ; // myDb.get_profile().getRegi_id();
+        String regi_id = myDb.get_profile().getRegi_id();
 
         PACKAGE_NAME = thisContext.getPackageName();
 
@@ -174,7 +175,7 @@ public class FileTransferReceiverFragment extends Fragment {
         reloadBtn =  getView().findViewById(R.id.reloadBtn);
         warningLayout.setVisibility(View.VISIBLE);
 
-        String mobile_num = "01521433"; // myDb.get_profile().getPhone_num();
+        String mobile_num = "017235423"; // myDb.get_profile().getPhone_num();
         String name = myDb.getMedicalProfile(regi_id).getName();
         phone_numTextView.setText(mobile_num);
         nameTextView.setText(name);
@@ -183,8 +184,8 @@ public class FileTransferReceiverFragment extends Fragment {
         double maxHR = -1;
         double minHr = 1000;
         for(ResultModel resultModel: resultList){
-            maxHR = Math.max(resultModel.getAvg_hr(), maxHR);
-            minHr = Math.min(resultModel.getAvg_hr(), minHr);
+            maxHR = Math.round(Math.max(resultModel.getAvg_hr(), maxHR));
+            minHr = Math.round(Math.min(resultModel.getAvg_hr(), minHr));
         }
         if(maxHR != -1){
             upBpmTxtView.setText(String.valueOf(maxHR));
@@ -310,7 +311,6 @@ public class FileTransferReceiverFragment extends Fragment {
                 public void onFailure(final Call call, final IOException e) {
                     // Handle the error
                     Log.d("sending", String.valueOf(e));
-
                 }
 
                 @Override
@@ -322,7 +322,7 @@ public class FileTransferReceiverFragment extends Fragment {
                         Log.d("sending", " successful");
                     }
 
-
+                    response.close();
                     // Upload successful
                 }
             });
@@ -529,6 +529,7 @@ public class FileTransferReceiverFragment extends Fragment {
                     public void run() {
                         boolean isInserted = myDb.insertFileInfo(fileName,
                                 "sw",
+                                getTimeStampFromFile(fileName),
                                 0,
                                 0);
                         new ModelRunner(mCtxt).execute(fileName);

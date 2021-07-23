@@ -101,7 +101,7 @@ public class FileJobService extends JobService {
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
         myDb = new DatabaseHelper(this);
         phone_num = myDb.get_profile().getPhone_num();
-        regi_id = "xyz"; // myDb.get_profile().getRegi_id();
+        regi_id = myDb.get_profile().getRegi_id();
         mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
@@ -136,10 +136,22 @@ public class FileJobService extends JobService {
                             filePath = (filePath.split(":", 2)[1]).substring(2);
 //                            Log.d("filepath", filePath);
                             Log.d("file_rcvd", filePath);
+
+                            String[] parts = filePath.split("\\.");
+                            Log.d("file_rcvd", String.valueOf(parts));
+
+                            String fileExtension = parts[parts.length - 1];
+                            Log.d("file_rcvd", fileExtension+ "  ---" + (fileExtension != "csv"));
+
+                            if(!fileExtension.equalsIgnoreCase("csv")) return;
+
                             boolean isInserted = myDb.insertFileInfo(filePath,
                                     SERVER_SRC_KEYWORD, // SERVER_SRC_KEYWORD
+                                    getTimeStampFromFile(filePath),
                                     1,
                                     1);
+                            Log.d("file_rcvd", fileExtension);
+
                             new ModelRunner(context).execute(filePath);
 
                         }
@@ -197,57 +209,6 @@ public class FileJobService extends JobService {
         }
     }
 
-//    private class ModelRunner extends AsyncTask<String, Integer, String> {
-//
-//        @Override
-//        protected String doInBackground(String... params) {
-//            String csvFileName = params[0];
-//            Log.d("tag", "before from python " + csvFileName);
-//            Python py = Python.getInstance();
-//            PyObject pyObject = py.getModule("model_runner");
-//
-//
-//            try {
-//                PyObject obj = pyObject.callAttr("input_preprocessing", MODEL_FILE_DIR + MODEL_NAME, csvFileName);
-//                Log.d("tag", "Result from python " + obj.toString());
-//                String jsonString = obj.toString();
-//                JSONObject jsonObject = new JSONObject(jsonString);
-//                String predict_ara = jsonObject.getString("predict_ara");
-//                JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
-//                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
-//                        hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
-//                resultList.add(convertStringToIntAra(obj.toString()));
-//                return obj.toString();
-//
-//            } catch (Exception e) {
-//                Log.d("tag", String.valueOf(e));
-//
-//                return "";
-//            }
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String result) {
-//            if (result.isEmpty()) return;
-//            super.onPostExecute(result);
-//            download_count--;
-//            String res = "";
-//            if (download_count == 0) {
-//                String title = "Your Heart Update";
-//                Notification notification = new NotificationCompat.Builder(mCtxt, CHANNEL_1_ID)
-//                        .setSmallIcon(R.drawable.ic_medicine)
-//                        .setContentTitle(title)
-//                        .setContentText(resultList.toString())
-//                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-//                        .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-//                        .build();
-//                notificationManager.notify(2, notification);
-//            }
-//
-//
-//        }
-//    }
-
 
     public class SendFileRecvAck extends AsyncTask<String, String, String> {
 
@@ -283,6 +244,7 @@ public class FileJobService extends JobService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             return "";
         }
 
@@ -341,7 +303,7 @@ public class FileJobService extends JobService {
                                     request.setVisibleInDownloadsUi(false);
                                     request.setDestinationUri(Uri.parse("file://" + CSV_FILE_DIR + file_name));
                                     Log.d("download", file_name);
-                                    downloadmanager.enqueue(request);
+                                    long downloadID = downloadmanager.enqueue(request);
                                 }
                                 Log.d("download", recvFileList);
                                 new SendFileRecvAck(recvFileList).execute();

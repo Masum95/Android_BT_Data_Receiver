@@ -1,6 +1,8 @@
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
@@ -49,7 +51,7 @@ public class Utils {
     public static JSONObject getMedicalProfileJson(Context context){
         final DatabaseHelper myDb = new DatabaseHelper(context);
 
-        String regi_id = "xyz"; // myDb.get_profile().getRegi_id();
+        String regi_id = myDb.get_profile().getRegi_id();
         MedicalProfileModel profile = myDb.getMedicalProfile(regi_id);
         JSONObject jsonObject = new JSONObject();
         try {
@@ -73,10 +75,38 @@ public class Utils {
     }
 
     public static String getTimeStampFromFile(String fileName) {
-
         String[] tmp = fileName.split("/");
-        tmp = tmp[tmp.length - 1].split("_");
+        tmp = tmp[tmp.length - 1].split("_|-");
         String timestamp = tmp[tmp.length - 1].split("\\.")[0];
         return timestamp;
+    }
+
+    public static boolean haveNetworkConnection(Context ctxt) {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) ctxt.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
+    }
+
+    public static String getBdTimeFromUnixTimeStamp(String unixTime){
+        long unixSeconds = Long.parseLong(unixTime);
+
+        Date date = new Date(unixSeconds*1000L);
+// the format of your date
+        SimpleDateFormat sdf = new SimpleDateFormat(" HH:mm");
+// give a timezone reference for formatting (see comment at the bottom)
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("GMT+6"));
+        String formattedDate = sdf.format(date);
+        return formattedDate;
     }
 }

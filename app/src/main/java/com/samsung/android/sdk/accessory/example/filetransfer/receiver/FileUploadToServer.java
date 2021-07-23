@@ -100,7 +100,7 @@ public class FileUploadToServer extends AsyncTask<String, Integer, String> {
                             Log.d("sending", "successful -------->" + path);
                             myDb.updateFileSendStatus(path);
                         }
-
+                        response.close();
 
                         // Upload successful
                     }

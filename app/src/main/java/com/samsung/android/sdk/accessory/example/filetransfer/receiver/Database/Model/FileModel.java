@@ -8,6 +8,7 @@ public class FileModel {
     public static final String COL_IS_UPLOADED = "is_uploaded";
     public static final String COL_SRC = "source";
     public static final String COL_UPLOAD_TIME = "uploaded_at";
+    public static final String COL_FILE_GEN_TIME = "gen_at";
     public static final String COL_RESULT_GEN = "result_generated";
 
     private String fileName;
@@ -15,6 +16,7 @@ public class FileModel {
     private int isUploaded;
     private String src;
     private String uploadedAt;
+    private String fileGenTime;
     private int resultGen;
 
 
@@ -25,7 +27,8 @@ public class FileModel {
                     COL_FILE_NAME + " TEXT," +
                     COL_IS_UPLOADED + " INTEGER," +
                     COL_SRC + " TEXT," +
-                    COL_UPLOAD_TIME + " DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                    COL_UPLOAD_TIME + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                    COL_FILE_GEN_TIME + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
                     COL_RESULT_GEN + " INTEGER" +
                     ")";
 
@@ -37,12 +40,13 @@ public class FileModel {
         return fileName;
     }
 
-    public FileModel(String fileName, int isUploaded, String src, String uploadedAt, int resultGen) {
+    public FileModel(String fileName, int isUploaded, String src, String uploadedAt, String fileGenTime, int resultGen) {
         this.fileName = fileName;
         this.isUploaded = isUploaded;
         this.src = src;
         this.uploadedAt = uploadedAt;
         this.resultGen = resultGen;
+        this.fileGenTime = fileGenTime;
     }
 
     public void setFileName(String fileName) {
@@ -79,5 +83,13 @@ public class FileModel {
 
     public void setResultGen(int resultGen) {
         this.resultGen = resultGen;
+    }
+
+    public String getFileGenTime() {
+        return fileGenTime;
+    }
+
+    public void setFileGenTime(String fileGenTime) {
+        this.fileGenTime = fileGenTime;
     }
 }

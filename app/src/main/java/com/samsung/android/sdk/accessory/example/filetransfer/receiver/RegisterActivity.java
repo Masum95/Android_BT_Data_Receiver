@@ -33,6 +33,7 @@ import org.json.JSONObject;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_ID_URL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.haveNetworkConnection;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -68,16 +69,18 @@ public class RegisterActivity extends AppCompatActivity {
             register.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intent);
-                    finish();
+//                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+//                    startActivity(intent);
+//                    finish();
+                    if(!haveNetworkConnection(getApplicationContext())){
+                        Toast.makeText(getApplicationContext(),"Something Went Wrong.\nPlease Check Your Internet Connection",Toast.LENGTH_LONG).show();
+                    }
+                    if (is_client_side_valid()) {
+                        // redirect to LoginActivity
 
-//                    if (is_client_side_valid()) {
-//                        // redirect to LoginActivity
-//
-//                        new serverValidation().execute();
-//
-//                    }
+                        new serverValidation().execute();
+
+                    }
 
                 }
             });

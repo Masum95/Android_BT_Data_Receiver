@@ -60,6 +60,7 @@ import java.io.UnsupportedEncodingException;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 
 public class FileTransferReceiver extends SAAgent {
     private static final String TAG = "FileTransferReceiver";
@@ -189,6 +190,7 @@ public class FileTransferReceiver extends SAAgent {
 //                if (errorCode != SAFileTransfer.ERROR_NONE) {
                     boolean isInserted = myDb.insertFileInfo(fileName,
                             "sw",
+                            getTimeStampFromFile(fileName),
                             0,
                             0);
                     new ModelRunner(mCtxt).execute(fileName);

@@ -84,13 +84,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean insertFileInfo(String name, String source, int result_generated, int is_uploaded) {
+    public boolean insertFileInfo(String name, String source, String fileGenTime, int result_generated, int is_uploaded) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_FILE_NAME, name);
         contentValues.put(COL_IS_UPLOADED, is_uploaded);
         contentValues.put(COL_SRC, source);
         contentValues.put(FileModel.COL_RESULT_GEN, result_generated);
+        contentValues.put(FileModel.COL_FILE_GEN_TIME, fileGenTime);
 
         long result = db.insert(FileModel.TABLE_NAME, null, contentValues);
         db.close();
@@ -262,9 +263,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d("create", getMedicalProfile(regi_Id)  + " " + values);
         if(getMedicalProfile(regi_Id) != null){
             db.update(MedicalProfileModel.TABLE_NAME, values, String.format(MedicalProfileModel.COL_REGI_ID + "= '%s'",   regi_Id), null);
+            Log.d("create", " +++++" + String.valueOf(values));
 
         }else{
             db.insert(MedicalProfileModel.TABLE_NAME, null, values);
+            Log.d("create", String.valueOf(values));
 
         }
 
@@ -332,14 +335,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return results;
     }
 
-    public int getCountOfLastNMin(Integer... args) {
+    public int getCountOfUploadedFilesLastNMin(Integer... args) {
         int mins = args.length > 0 ? args[0] : 30;
 
-        String selectQuery = String.format("SELECT * FROM %s where %s >=datetime('now', '-%d minutes') ORDER BY %s ASC LIMIT 48;", FileModel.TABLE_NAME,  COL_UPLOAD_TIME,  mins, COL_UPLOAD_TIME);
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch')  >=datetime('now', '-%d minutes') ORDER BY %s ASC LIMIT 48;", FileModel.TABLE_NAME,  COL_UPLOAD_TIME,  mins, COL_UPLOAD_TIME);
         Log.d("create___", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
         int count = cursor.getCount();
+        cursor.close();
+        return count;
+    }
+
+    public int getCountOfGeneratedFileInBetweenN_Nplus1Hours(Integer... args) {
+        int fromB4Hour = (args.length > 0 ? args[0]: 24) ;
+        int endB4Hour = fromB4Hour - 1 ;
+
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') and datetime(%s, 'unixepoch') <= datetime('now', '-%d Hour');", FileModel.TABLE_NAME,  FileModel.COL_FILE_GEN_TIME, fromB4Hour,  FileModel.COL_FILE_GEN_TIME, endB4Hour);
+        Log.d("create___", selectQuery);
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        int count = cursor.getCount();
+        Log.d("create___", String.valueOf(count));
         cursor.close();
         return count;
     }
