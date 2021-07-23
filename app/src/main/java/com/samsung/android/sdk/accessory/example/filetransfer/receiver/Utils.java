@@ -1,8 +1,11 @@
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
@@ -109,4 +112,13 @@ public class Utils {
         String formattedDate = sdf.format(date);
         return formattedDate;
     }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB) // API 11
+    public static void startMultpleModelRunnerAsyncTaskInParallel(ModelRunner asyncTask, String... params ) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+        else
+            asyncTask.execute(params);
+    }
+
 }

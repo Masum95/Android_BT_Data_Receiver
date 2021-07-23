@@ -1,5 +1,6 @@
 package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
+import android.annotation.TargetApi;
 import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.job.JobParameters;
@@ -59,6 +60,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SERVER_SRC_KEYWORD;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.startMultpleModelRunnerAsyncTaskInParallel;
 
 public class FileJobService extends JobService {
     private static final String TAG = "ExampleJobService";
@@ -151,8 +153,8 @@ public class FileJobService extends JobService {
                                     1,
                                     1);
                             Log.d("file_rcvd", fileExtension);
-
-                            new ModelRunner(context).execute(filePath);
+                            startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(context), filePath);
+//                            new ModelRunner(context).execute(filePath);
 
                         }
                         Log.d("file_rcvd_here", String.valueOf(status) + " " + String.valueOf(reason));
@@ -175,39 +177,8 @@ public class FileJobService extends JobService {
         return true;
     }
 
-    private class ModelRunnerTmp extends AsyncTask<String, Integer, String> {
-
-        @Override
-        protected String doInBackground(String... params) {
-            String csvFileName = "_nf8VNRdtlCse1yloaZqM0ykXQA-001_1626025296";
-            Log.d("tag", "before from python " + csvFileName);
-            Python py = Python.getInstance();
-            PyObject pyObject = py.getModule("model_runner");
 
 
-            try {
-                PyObject obj = pyObject.callAttr("input_preprocessingTmp");
-                Log.d("tag", "Result from python " + obj.toString());
-                String jsonString = obj.toString();
-                JSONObject jsonObject = new JSONObject(jsonString);
-                String predict_ara = jsonObject.getString("predict_ara");
-                JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
-                myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
-                        hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
-                return obj.toString();
-
-            } catch (Exception e) {
-                Log.d("tag", String.valueOf(e));
-
-                return "";
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-        }
-    }
 
 
     public class SendFileRecvAck extends AsyncTask<String, String, String> {

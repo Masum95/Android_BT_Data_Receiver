@@ -69,6 +69,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.startMultpleModelRunnerAsyncTaskInParallel;
 
 
 public class FileTransferReceiverFragment extends Fragment {
@@ -532,8 +533,7 @@ public class FileTransferReceiverFragment extends Fragment {
                                 getTimeStampFromFile(fileName),
                                 0,
                                 0);
-                        new ModelRunner(mCtxt).execute(fileName);
-
+                        startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(mCtxt), fileName);
                         if(isInserted == true)
                             Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
                         else

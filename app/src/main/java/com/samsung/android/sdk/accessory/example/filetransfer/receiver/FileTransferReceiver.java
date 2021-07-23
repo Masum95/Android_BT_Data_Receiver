@@ -39,6 +39,7 @@ import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+
 import android.util.Log;
 import android.widget.Toast;
 
@@ -50,10 +51,8 @@ import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.
 import com.samsung.android.sdk.accessoryfiletransfer.SAFileTransfer;
 import com.samsung.android.sdk.accessoryfiletransfer.SAFileTransfer.EventListener;
 import com.samsung.android.sdk.accessoryfiletransfer.SAft;
+
 import androidx.annotation.NonNull;
-
-
-
 
 
 import java.io.UnsupportedEncodingException;
@@ -61,6 +60,7 @@ import java.io.UnsupportedEncodingException;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.startMultpleModelRunnerAsyncTaskInParallel;
 
 public class FileTransferReceiver extends SAAgent {
     private static final String TAG = "FileTransferReceiver";
@@ -76,13 +76,11 @@ public class FileTransferReceiver extends SAAgent {
     private static boolean isRunning;
 
     //-----------------------------------------------------
-    public int counter=0;
-
+    public int counter = 0;
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private void startMyOwnForeground()
-    {
+    private void startMyOwnForeground() {
         String NOTIFICATION_CHANNEL_ID = "example.permanence";
         String channelName = "Background Service";
         NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
@@ -109,7 +107,7 @@ public class FileTransferReceiver extends SAAgent {
 
 
         Log.d("intent", String.valueOf(intent));
-        if (intent == null || intent.getAction().equals(String.valueOf( Constants.ACTION.STOPFOREGROUND_ACTION))) {
+        if (intent == null || intent.getAction().equals(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION))) {
 
             stopForeground(true);
             stopSelfResult(startId);
@@ -117,15 +115,11 @@ public class FileTransferReceiver extends SAAgent {
             onDestroy();
             return START_NOT_STICKY;
 
-        }
-
-        else if (intent.getAction().equals(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION) )) {
+        } else if (intent.getAction().equals(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION))) {
             Log.d("tag", "Received Start Foreground Intent ");
 
             return START_STICKY;
         }
-
-
 
 
         return START_STICKY;
@@ -156,6 +150,7 @@ public class FileTransferReceiver extends SAAgent {
     public FileTransferReceiver() {
         super(TAG, SASOCKET_CLASS);
     }
+
     SharedPreferences prefs;
 
 
@@ -188,17 +183,18 @@ public class FileTransferReceiver extends SAAgent {
                 Log.d(TAG, "onTransferCompleted: tr id : " + transId + " file name : " + fileName + " error : "
                         + errorCode);
 //                if (errorCode != SAFileTransfer.ERROR_NONE) {
-                    boolean isInserted = myDb.insertFileInfo(fileName,
-                            "sw",
-                            getTimeStampFromFile(fileName),
-                            0,
-                            0);
-                    new ModelRunner(mCtxt).execute(fileName);
+                boolean isInserted = myDb.insertFileInfo(fileName,
+                        "sw",
+                        getTimeStampFromFile(fileName),
+                        0,
+                        0);
+                startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(mCtxt), fileName);
 
-                    if(isInserted == true)
-                        Toast.makeText(mCtxt,"Data Inserted",Toast.LENGTH_LONG).show();
-                    else
-                        Toast.makeText(mCtxt,"Data not Inserted",Toast.LENGTH_LONG).show();
+
+                if (isInserted == true)
+                    Toast.makeText(mCtxt, "Data Inserted", Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(mCtxt, "Data not Inserted", Toast.LENGTH_LONG).show();
 
 //                    mFileAction.onFileActionTransferComplete(fileName);
 //                }
@@ -298,9 +294,9 @@ public class FileTransferReceiver extends SAAgent {
     public void onDestroy() {
         isRunning = false;
         myDb.close();
-        try{
+        try {
             mSAFileTransfer.close();
-        }catch (Exception e1) {
+        } catch (Exception e1) {
             e1.printStackTrace();
         }
         mSAFileTransfer = null;
