@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
 import com.androidnetworking.AndroidNetworking;
@@ -124,9 +125,9 @@ public class ExportPdfFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-                if(!haveNetworkConnection(thisContext)){
-                    Toast.makeText(thisContext,"Something Went Wrong.\nPlease Check Your Internet Connection",Toast.LENGTH_LONG).show();
-                }
+//                if(!haveNetworkConnection(thisContext)){
+//                    Toast.makeText(thisContext,"Something Went Wrong.\nPlease Check Your Internet Connection",Toast.LENGTH_LONG).show();
+//                }
                 new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
 
                 Toast.makeText(thisContext, "Record is being Downloded.\n You Will be Notified once downloaed", Toast.LENGTH_SHORT).show();
@@ -191,31 +192,15 @@ public class ExportPdfFragment extends Fragment {
 
 
                 File file = new File(jsonString);
+                Uri uri = FileProvider.getUriForFile(getContext(),
+                        BuildConfig.APPLICATION_ID + ".provider",
+                        file);
 
-                Uri uri = Uri.fromFile(file);
-                Intent target = new Intent(Intent.ACTION_VIEW);
-                target.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                target.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                target.setDataAndType(
-                        uri,
-                        MimeTypeMap.getSingleton().getMimeTypeFromExtension("pdf")
-                ); // For now there is only type 1 (PDF).
-                Intent intent = Intent.createChooser(target, "openTitle");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                }
-                try {
-                    startActivity(intent);
-                } catch (ActivityNotFoundException e) {
-                    if (BuildConfig.DEBUG) e.printStackTrace();
 
-                }
-
-//                File file = new File(jsonString);
-//                Intent intent = new Intent(Intent.ACTION_VIEW);
-//                intent.setDataAndType(Uri.fromFile(file), "application/pdf");
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-//                startActivity(intent);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "application/pdf");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(intent);
 
             } catch (Exception e) {
                 Log.d("tag", String.valueOf(e));
