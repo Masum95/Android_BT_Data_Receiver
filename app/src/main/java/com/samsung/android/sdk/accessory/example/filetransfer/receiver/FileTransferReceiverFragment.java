@@ -177,7 +177,7 @@ public class FileTransferReceiverFragment extends Fragment {
         reloadBtn =  getView().findViewById(R.id.reloadBtn);
         warningLayout.setVisibility(View.VISIBLE);
 
-        String mobile_num = "017235423"; // myDb.get_profile().getPhone_num();
+        String mobile_num =  myDb.get_profile().getPhone_num();
         String name = myDb.getMedicalProfile(regi_id).getName();
         phone_numTextView.setText(mobile_num);
         nameTextView.setText(name);
