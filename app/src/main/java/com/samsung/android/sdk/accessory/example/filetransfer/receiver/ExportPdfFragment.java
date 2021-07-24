@@ -3,7 +3,9 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 import android.app.DatePickerDialog;
 import android.app.DownloadManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -17,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -33,12 +36,16 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -60,9 +67,12 @@ import okhttp3.Response;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_UPLOAD_GET_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.PDF_GENERATE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.RECORD_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.haveNetworkConnection;
 
 
@@ -147,33 +157,95 @@ public class ExportPdfFragment extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
-            myDb.close();
+            List<ResultModel> resList = new ArrayList<>();
+            resList = myDb.getResults();
+
             String recordType = getRadioValue(R.id.recordsTypeRadioGroup);
 
             String fromDate = fromDateInput.getText().toString();
             String toDate = toDateInput.getText().toString();
 
-            Uri builtUri = Uri.parse(PDF_GENERATE_URL)
-                    .buildUpon()
-                    .appendQueryParameter("type", recordType)
-                    .appendQueryParameter("start_time", fromDate)
-                    .appendQueryParameter("end_time", toDate)
-                    .appendQueryParameter("registration_id", regi_id)
-                    .build();
+            // python block
+            List<String> filesList = new ArrayList<>();
+            List<String> predList = new ArrayList<>();
+            List<String> timestampList = new ArrayList<>();
+            for(ResultModel res: resList){
+                filesList.add(res.getFileName());
+                predList.add(res.getResult());
+                timestampList.add(res.getTimestamp());
+            }
+            myDb.close();
+
+            Python py = Python.getInstance();
+            PyObject pyObject = py.getModule("model_runner");
+
+            Log.d("tag", "before  from python "+ filesList.toString() );
+            Log.d("tag", "before  from python "+ predList.toString() );
+            Log.d("tag", "before  from python "+ timestampList.toString() );
+            Log.d("tag", String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)));
+            String output_file = String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)) + "/record.pdf";
+            try {
+                PyObject obj = pyObject.callAttr("pdf_preprocessing", output_file, filesList.toString(), predList.toString(), timestampList.toString());
+                String jsonString = obj.toString();
+                Log.d("tag", "Result from python "+ jsonString );
 
 
+                File file = new File(jsonString);
 
-            DownloadManager.Request request = new DownloadManager.Request(builtUri);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "record.pdf");
+                Uri uri = Uri.fromFile(file);
+                Intent target = new Intent(Intent.ACTION_VIEW);
+                target.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                target.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                target.setDataAndType(
+                        uri,
+                        MimeTypeMap.getSingleton().getMimeTypeFromExtension("pdf")
+                ); // For now there is only type 1 (PDF).
+                Intent intent = Intent.createChooser(target, "openTitle");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+                try {
+                    startActivity(intent);
+                } catch (ActivityNotFoundException e) {
+                    if (BuildConfig.DEBUG) e.printStackTrace();
 
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                }
 
-            request.setTitle("Record File");
-            request.setDescription("Downloading");
-            request.setVisibleInDownloadsUi(true);
-//            request.setDestinationUri(Uri.parse("file://" + RECORD_FILE_DIR +"record.pdf" ));
-            Log.d("downloading", String.valueOf(request));
-            downloadmanager.enqueue(request);
+//                File file = new File(jsonString);
+//                Intent intent = new Intent(Intent.ACTION_VIEW);
+//                intent.setDataAndType(Uri.fromFile(file), "application/pdf");
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+//                startActivity(intent);
+
+            } catch (Exception e) {
+                Log.d("tag", String.valueOf(e));
+
+                return "";
+            }
+            // ---------
+
+//
+//            Uri builtUri = Uri.parse(PDF_GENERATE_URL)
+//                    .buildUpon()
+//                    .appendQueryParameter("type", recordType)
+//                    .appendQueryParameter("start_time", fromDate)
+//                    .appendQueryParameter("end_time", toDate)
+//                    .appendQueryParameter("registration_id", regi_id)
+//                    .build();
+//
+//
+//
+//            DownloadManager.Request request = new DownloadManager.Request(builtUri);
+//            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "record.pdf");
+//
+//            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+//
+//            request.setTitle("Record File");
+//            request.setDescription("Downloading");
+//            request.setVisibleInDownloadsUi(true);
+////            request.setDestinationUri(Uri.parse("file://" + RECORD_FILE_DIR +"record.pdf" ));
+//            Log.d("downloading", String.valueOf(request));
+//            downloadmanager.enqueue(request);
 
 
 //            getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,

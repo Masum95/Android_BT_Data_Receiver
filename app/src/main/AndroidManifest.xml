@@ -30,6 +30,9 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
+
+
+
         <activity
             android:name=".Result"
             android:label="@string/title_activity_result"

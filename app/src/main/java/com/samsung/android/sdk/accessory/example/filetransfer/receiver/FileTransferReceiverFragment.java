@@ -66,6 +66,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.DEST_DIRECTORY;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_FILE_DIR;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.RECORD_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
@@ -345,12 +346,18 @@ public class FileTransferReceiverFragment extends Fragment {
 
             File csvFolder = new File(CSV_FILE_DIR);
             File modelFolder = new File(MODEL_FILE_DIR);
+            File recordFolder = new File(RECORD_FILE_DIR);
 
 
             boolean success = true;
             if (!csvFolder.exists()) {
                 success = csvFolder.mkdirs();
                 Log.d("tag", "Files Created here " + CSV_FILE_DIR + success);
+
+            }
+            if (!recordFolder.exists()) {
+                success = recordFolder.mkdirs();
+                Log.d("tag", "Files Created here " + recordFolder + success);
 
             }
             if (!modelFolder.exists()) {

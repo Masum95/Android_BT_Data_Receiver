@@ -15,6 +15,12 @@ import sys
 from sklearn.preprocessing import scale
 from sklearn.preprocessing import minmax_scale
 
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import datetime
+import re
 '''def sliding_window(x, w=800, o=400):
 	"""
     x: 1D numpy array
@@ -232,12 +238,47 @@ def input_preprocessing(model_path, csv_filepath):
     return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1).tolist(), 'hear_rate_data': { 'activity': activity, 'hr': hr }})
 
 
-def input_preprocessingTmp():
-	"""
-    Following program takes csv_directory as input, does necessary operations and then outputs another csv in same directory.
-    :param csv_filepath // path where all csv files will be stored
-    :return:
-    """
-	randNum = random.randint(60, 100)
+def pdf_generate(filename: str, Y: np.array, Text: list, Timestamp, figsize=(7, 3), fmt="%d-%b-%Y %I:%M:%S %p"):
+    filename = filename if filename.lower().endswith('.pdf') else filename + '.pdf'
+    with PdfPages(filename) as pdf:
+        for y, text, timestamp in zip(Y, Text, Timestamp):
+            fig = plt.figure(figsize=figsize)
+            plt.plot(y)
+            plt.xticks([], [])
+            plt.yticks([], [])
+            datetime_s = datetime.datetime.fromtimestamp(timestamp).strftime(fmt)
+            plt.xlabel(f'{datetime_s} | {text}', color='red', fontsize='large')
+            pdf.savefig(fig)
+            plt.close()
 
-	return json.dumps({'predict_ara': '[1 0 0 1]', 'hear_rate_data': { 'activity': 'W', 'hr': str(randNum) }})
+
+def getResListFromString(st):
+    preds_list = [int(x.strip()) for x in re.split(',| |\[|\]',st) if x]
+    preds_list = map(lambda x: 'Suspected Af' if x ==1 else 'Non-Af', preds_list )
+    return preds_list
+
+
+def pdf_preprocessing(output_file, files_list, res_list, timestamp_list):
+
+    #    Following program takes csv_directory as input, does necessary operations and then outputs another csv in same directory.
+    #    :param csv_filepath // path where all csv files will be stored
+    #    :return:
+    timestamp_list = [int(x.strip()) for x in re.split(',| |\[|\]',timestamp_list) if x]
+    files_list = [x.strip() for x in re.split(',| |\[|\]',files_list) if x]
+    final_output_concat_list = np.array([])
+    timestamp_concat_list = []
+
+    for file, timestamp in zip(files_list, timestamp_list):
+        df = pd.read_csv(file, engine='python', header=None)
+        raw = df.values[:, 1]
+        final_output, layer6_output, new_freq = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
+
+        if final_output_concat_list.size == 0:
+            final_output_concat_list = final_output
+        else:
+            final_output_concat_list = np.concatenate((final_output_concat_list, final_output), axis=0)
+
+        timestamp_concat_list = timestamp_concat_list + [int(timestamp) ] * len(final_output)
+
+    pdf_generate(output_file, final_output_concat_list, getResListFromString(res_list) , timestamp_concat_list)
+    return output_file
