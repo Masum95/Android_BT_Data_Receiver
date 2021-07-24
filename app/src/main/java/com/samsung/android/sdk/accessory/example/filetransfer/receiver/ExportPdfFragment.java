@@ -89,7 +89,9 @@ public class ExportPdfFragment extends Fragment {
     String dob;
     Context thisContext;
     DownloadManager downloadmanager;
+    TextView  nameTextView;
 
+    DatabaseHelper myDb;
 
     Dictionary<String, Integer> radioTextToButtonMapping = new Hashtable();
 
@@ -106,14 +108,20 @@ public class ExportPdfFragment extends Fragment {
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        myDb = new DatabaseHelper(thisContext);
+        String regi_id = myDb.get_profile().getRegi_id();
+
         downloadmanager = (DownloadManager)  thisContext.getSystemService(Context.DOWNLOAD_SERVICE);
 
 
+        nameTextView =  getView().findViewById(R.id.profileNameInExport);
 
         submitBtn = (Button) getView().findViewById(R.id.exportToPdfButton);
         fromDateInput = (TextView) getView().findViewById(R.id.fromDateRecord);
         toDateInput = (TextView) getView().findViewById(R.id.toDateRecord);
-
+        String name = myDb.getMedicalProfile(regi_id).getName();
+        nameTextView.setText(name);
+        myDb.close();
         new FileUploadToServer(thisContext).execute();
 
         Log.d("register", "here");

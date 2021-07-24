@@ -183,7 +183,7 @@ public class FileTransferReceiverFragment extends Fragment {
         phone_numTextView.setText(mobile_num);
         nameTextView.setText(name);
 
-        List<ResultModel> resultList = myDb.getResults(24);
+        List<ResultModel> resultList = myDb.getResultsOfNHours(24);
         double maxHR = -1;
         double minHr = 1000;
         for(ResultModel resultModel: resultList){
