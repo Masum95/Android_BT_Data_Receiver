@@ -58,6 +58,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MODEL_NAME;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SERVER_SRC_KEYWORD;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_SRC_KEYWORD;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.NotificationHandler.CHANNEL_1_ID;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.startMultpleModelRunnerAsyncTaskInParallel;
@@ -148,7 +149,7 @@ public class FileJobService extends JobService {
                             if(!fileExtension.equalsIgnoreCase("csv")) return;
 
                             boolean isInserted = myDb.insertFileInfo(filePath,
-                                    SERVER_SRC_KEYWORD, // SERVER_SRC_KEYWORD
+                                    SERVER_SRC_KEYWORD,
                                     getTimeStampFromFile(filePath),
                                     1,
                                     1);

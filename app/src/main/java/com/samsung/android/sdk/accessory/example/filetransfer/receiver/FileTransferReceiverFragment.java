@@ -69,6 +69,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.RECORD_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SCHEDULER_INTERVAL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.WATCH_SRC_KEYWORD;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.startMultpleModelRunnerAsyncTaskInParallel;
 
@@ -536,7 +537,7 @@ public class FileTransferReceiverFragment extends Fragment {
                     @Override
                     public void run() {
                         boolean isInserted = myDb.insertFileInfo(fileName,
-                                "sw",
+                                WATCH_SRC_KEYWORD,
                                 getTimeStampFromFile(fileName),
                                 0,
                                 0);
