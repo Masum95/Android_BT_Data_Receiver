@@ -130,7 +130,7 @@ public class ExportPdfFragment extends Fragment {
 //                }
                 new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
 
-                Toast.makeText(thisContext, "Record is being Downloded.\n You Will be Notified once downloaed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(thisContext, "Record is being Prepared.\n You Will be Notified once file is ready", Toast.LENGTH_LONG).show();
             }
         });
     }
