@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +17,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendForm;
+import com.github.mikephil.charting.components.LegendEntry;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -96,7 +98,7 @@ public class LineChartModule {
         lineChart.setDrawBorders(false);  //Whether to add a border on the line chart
 
         // no description text
-        lineChart.getDescription().setText("Description of my chart");
+        lineChart.getDescription().setText("Last 24 Hours Heart-rate");
         ;// Data description
         // If there is no data, this will be displayed, similar to the emtpyview of listview
 //        lineChart.setNoDataTextDescription("You need to provide data for the chart.");
@@ -124,10 +126,18 @@ public class LineChartModule {
         Legend mLegend = lineChart.getLegend(); // Set the scale icon to show that it is the value of the set of y
 
         // modify the legend ...
-        // mLegend.setPosition(LegendPosition.LEFT_OF_CHART);
+//        mLegend.setPosition(LegendPosition.LEFT_OF_CHART);
+
+
         mLegend.setForm(LegendForm.CIRCLE);// style
         mLegend.setFormSize(6f);// font
         mLegend.setTextColor(Color.WHITE);// colour
+
+        LegendEntry legendEntryA = new LegendEntry();
+        legendEntryA.label = "actual heart-rate";
+        legendEntryA.formColor = Color.GREEN;
+        mLegend.setCustom(Arrays.asList(legendEntryA));
+
 // mLegend.setTypeface(mTf);//Font
 
 //        lineChart.animateX(2500); // Immediately executed animation, x-axis
