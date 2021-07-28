@@ -180,7 +180,11 @@ def preprocess_bayesbeat(raw, sample_rate=10, plot=False):
     layer5_output = Layer_5(layer4_output, wd_list, 0.3, enable_print=False)
     layer6_output, new_freq = Layer_6(layer5_output,  new_sample_rate=new_sample_rate, enable_print=False)
     final_output = np.reshape(np.copy(layer6_output), (layer6_output.shape[0], layer6_output.shape[1], 1))
-    return final_output, layer6_output, new_freq
+    if(len(layer1_output)!=0):
+        accepted_sig_ratio = final_output.shape[0] / len(layer1_output)
+    else:
+        accepted_sig_ratio = 0
+    return final_output, layer6_output, new_freq, accepted_sig_ratio
 
 
 '''def run_model(model_path, ppg_signals):
@@ -231,11 +235,11 @@ def input_preprocessing(model_path, csv_filepath):
 
     df = pd.read_csv(csv_filepath, engine='python', header=None)
     raw = df.values[:, 1]
-    final_output, layer6_output, new_freq = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
+    final_output, layer6_output, new_freq, accepted_sig_ratio = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
     final_tens = torch.Tensor(final_output).view(-1, 1, 800)
 
     (hr, activity) = avg_hr_activity(df)
-    return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1).tolist(), 'hear_rate_data': { 'activity': activity, 'hr': hr }})
+    return json.dumps({'predict_ara': np.argmax(run_model_new(model_path, final_tens), axis=1).tolist(), 'hear_rate_data': { 'activity': activity, 'hr': hr }, 'accepted_sig_ratio': accepted_sig_ratio})
 
 
 def pdf_generate(filename: str, Y: np.array, Text: list, Timestamp, figsize=(7, 3), fmt="%d-%b-%Y %I:%M:%S %p"):
@@ -271,7 +275,7 @@ def pdf_preprocessing(output_file, files_list, res_list, timestamp_list):
     for file, timestamp in zip(files_list, timestamp_list):
         df = pd.read_csv(file, engine='python', header=None)
         raw = df.values[:, 1]
-        final_output, layer6_output, new_freq = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
+        final_output, layer6_output, new_freq, accepted_sig_ratio = preprocess_bayesbeat(raw, sample_rate=10, plot=False)
 
         if final_output_concat_list.size == 0:
             final_output_concat_list = final_output
