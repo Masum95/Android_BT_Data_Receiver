@@ -26,13 +26,28 @@
         android:layout_height="50dp"
         android:layout_marginTop="32dp"
         android:background="@drawable/ic_baseline_refresh_24"
-        android:paddingLeft="5dp"
-        android:paddingRight="10dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="10dp"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.26"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/phoneNum" />
+
+    <Button
+        android:id="@+id/stopBtn"
+        android:layout_width="45dp"
+        android:layout_height="50dp"
+        android:background="@drawable/ic_baseline_stop_circle_24"
+        android:paddingStart="1dp"
+        android:paddingEnd="20dp"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/phoneNum"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.065"
+        app:layout_constraintLeft_toLeftOf="@+id/reloadBtn"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="267dp" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
@@ -54,7 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:accessibilityLiveRegion="none"
-            android:text="Not Receiving File" />
+            android:text="Monitoring Off" />
 
     </com.google.android.material.tabs.TabLayout>
 
@@ -160,16 +175,16 @@
                 android:layout_weight="0.2"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/warningLine1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Frequent Suspicious Rhythm"
-                    android:textAlignment="center"
-                    android:textColor="#F44336"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+<!--                <TextView-->
+<!--                    android:id="@+id/warningLine1"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginTop="10dp"-->
+<!--                    android:text="Frequent Suspicious Rhythm"-->
+<!--                    android:textAlignment="center"-->
+<!--                    android:textColor="#F44336"-->
+<!--                    android:textSize="20sp"-->
+<!--                    android:textStyle="bold" />-->
 
                 <TextView
                     android:id="@+id/warningLine2"

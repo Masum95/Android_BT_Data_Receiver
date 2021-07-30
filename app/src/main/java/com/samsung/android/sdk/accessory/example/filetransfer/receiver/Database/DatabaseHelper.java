@@ -16,6 +16,7 @@ import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Result;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -102,6 +103,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return true;
     }
 
+    public void updateFileInfo( String file_name,  int result_generated ) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(FileModel.COL_RESULT_GEN, result_generated);
+
+        db.update(FileModel.TABLE_NAME, contentValues, String.format(COL_FILE_NAME + "= '%s'",   file_name), null);
+
+
+        db.close();
+
+    }
+
 
     public List<FileModel> getFiles(Integer... args) {
         int limit = args.length > 0 ? args[0] : 0;
@@ -149,6 +163,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, new String[]{WATCH_SRC_KEYWORD});
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                FileModel file = new FileModel();
+                file.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
+                file.setSrc(cursor.getString(cursor.getColumnIndex(COL_SRC)));
+                file.setUploadedAt(cursor.getString(cursor.getColumnIndex(COL_UPLOAD_TIME)));
+                file.setIsUploaded(cursor.getInt(cursor.getColumnIndex(COL_IS_UPLOADED)));
+                file.setResultGen(cursor.getInt(cursor.getColumnIndex(FileModel.COL_RESULT_GEN)));
+
+                files.add(file);
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return notes list
+        return files;
+    }
+
+    public List<FileModel> getUngeneratedResultFilePaths(Integer... args) {
+        List<FileModel> files = new ArrayList<>();
+
+
+
+
+        String selectQuery  = String.format("SELECT * FROM %s where %s = 0;", FileModel.TABLE_NAME, FileModel.COL_RESULT_GEN);
+
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
 
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
@@ -228,6 +276,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 medicalProfileModel.setHas_covid(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_COVID)));
                 medicalProfileModel.setHas_smoking(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_SMOKING)));
                 medicalProfileModel.setHas_eating_outside(cursor.getString(cursor.getColumnIndex(MedicalProfileModel.COL_HAS_EATING_OUTSIDE)));
+                medicalProfileModel.setMin_hr(cursor.getDouble(cursor.getColumnIndex(MedicalProfileModel.COL_MIN_HR)));
+                medicalProfileModel.setMax_hr(cursor.getDouble(cursor.getColumnIndex(MedicalProfileModel.COL_MAX_HR)));
 
 
             }
@@ -259,6 +309,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (data.containsKey("has_smoking")) values.put(MedicalProfileModel.COL_HAS_SMOKING, data.get("has_smoking"));
         if (data.containsKey("has_eating_outside"))
             values.put(MedicalProfileModel.COL_HAS_EATING_OUTSIDE, data.get("has_eating_outside"));
+        if (data.containsKey("min_hr"))
+            values.put(MedicalProfileModel.COL_MIN_HR, data.get("min_hr"));
+        if (data.containsKey("max_hr"))
+            values.put(MedicalProfileModel.COL_MAX_HR, data.get("max_hr"));
 
         Log.d("create", getMedicalProfile(regi_Id)  + " " + values);
         if(getMedicalProfile(regi_Id) != null){
@@ -280,33 +334,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void createResult(String file_name, String timestamp, String result, String activity, double heart_rate) {
+    public void createResult(String file_name, String timestamp, String result, String activity, double heart_rate, double ac_sig_ratio, String uncertain_score) {
         Log.d("CREATE", file_name);
         SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery = String.format("SELECT * FROM %s where %s = '%s';", ResultModel.TABLE_NAME, ResultModel.COL_FILE_NAME, file_name);
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        int count = cursor.getCount();
+        if(count !=0 ) return;
+
         ContentValues values = new ContentValues();
         values.put(COL_FILE_NAME, file_name);
         values.put(COL_RESULT, result);
         values.put(COL_TIMESTAMP, timestamp);
         values.put(COL_AVG_ACTIVITY, activity);
         values.put(COL_AVG_HEART_RATE, heart_rate);
+        values.put(ResultModel.COL_ACCEPTED_SIG_RATIO, ac_sig_ratio);
+        values.put(ResultModel.COL_UNCERTAINTY_SCORE, uncertain_score);
 
         db.insert(ResultModel.TABLE_NAME, null, values);
         db.close();
 
     }
 
-    public List<ResultModel> getResults(Integer... args) {
-        int limit = args.length > 0 ? args[0] : 0;
+    public List<ResultModel> getResults(int limit, double accepted_sig_ratio_threshold) {
         List<ResultModel> results = new ArrayList<>();
 
         // Select All Query
         String selectQuery = null;
-        if (limit == 0) {
-            selectQuery = "SELECT  * FROM " + ResultModel.TABLE_NAME + " ORDER BY " +
-                    FileModel.COL_ID + " DESC";
+        if (limit == -1) {
+            selectQuery = String.format("SELECT * FROM %s where %s != -1 and %s >= %f ORDER BY %s;", ResultModel.TABLE_NAME, COL_AVG_HEART_RATE, ResultModel.COL_ACCEPTED_SIG_RATIO, accepted_sig_ratio_threshold, COL_TIMESTAMP);
         } else {
-            selectQuery = "SELECT  * FROM " + ResultModel.TABLE_NAME + " ORDER BY " +
-                    FileModel.COL_ID + "  DESC limit " + limit;
+            selectQuery = String.format("SELECT * FROM %s where %s != -1 and %s >= %f  ORDER BY %s DESC LIMIT %d;", ResultModel.TABLE_NAME, COL_AVG_HEART_RATE, ResultModel.COL_ACCEPTED_SIG_RATIO, accepted_sig_ratio_threshold, COL_TIMESTAMP, limit);
+
         }
 
 
@@ -322,6 +382,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 result.setAvg_activity(cursor.getString(cursor.getColumnIndex(COL_AVG_ACTIVITY)));
                 result.setAvg_hr(cursor.getDouble(cursor.getColumnIndex(COL_AVG_HEART_RATE)));
                 result.setTimestamp(cursor.getString(cursor.getColumnIndex(ResultModel.COL_TIMESTAMP)));
+                result.setAccepted_sig_ratio(cursor.getDouble(cursor.getColumnIndex(ResultModel.COL_ACCEPTED_SIG_RATIO)));
+                result.setUncertainity_score(cursor.getString(cursor.getColumnIndex(ResultModel.COL_UNCERTAINTY_SCORE)));
 
 
                 results.add(result);
@@ -347,26 +409,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return count;
     }
 
-    public int getCountOfGeneratedFileInBetweenN_Nplus1Hours(Integer... args) {
-        int fromB4Hour = (args.length > 0 ? args[0]: 24) ;
-        int endB4Hour = fromB4Hour - 1 ;
-
-        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') and datetime(%s, 'unixepoch') <= datetime('now', '-%d Hour');", FileModel.TABLE_NAME,  FileModel.COL_FILE_GEN_TIME, fromB4Hour,  FileModel.COL_FILE_GEN_TIME, endB4Hour);
-        Log.d("create___", selectQuery);
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
-        int count = cursor.getCount();
-        Log.d("create___", String.valueOf(count));
-        cursor.close();
-        return count;
-    }
-
     public List<ResultModel> getResultsOfNHours(Integer... args) {
         int hours = args.length > 0 ? args[0] : 24;
         List<ResultModel> results = new ArrayList<>();
 
         // Select All Query
-        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') ORDER BY %s ASC LIMIT 48;", ResultModel.TABLE_NAME, COL_TIMESTAMP, hours, COL_TIMESTAMP);
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') " +
+                "AND %s != -1 " +
+                " ORDER BY %s ASC LIMIT 48;", ResultModel.TABLE_NAME, COL_TIMESTAMP, hours, COL_AVG_HEART_RATE, COL_TIMESTAMP);
 
         Log.d("create___", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
@@ -381,7 +431,64 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 result.setAvg_activity(cursor.getString(cursor.getColumnIndex(COL_AVG_ACTIVITY)));
                 result.setAvg_hr(cursor.getDouble(cursor.getColumnIndex(COL_AVG_HEART_RATE)));
                 result.setTimestamp(cursor.getString(cursor.getColumnIndex(ResultModel.COL_TIMESTAMP)));
+                result.setAccepted_sig_ratio(cursor.getDouble(cursor.getColumnIndex(ResultModel.COL_ACCEPTED_SIG_RATIO)));
+                result.setUncertainity_score(cursor.getString(cursor.getColumnIndex(ResultModel.COL_UNCERTAINTY_SCORE)));
 
+                results.add(result);
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return notes list
+        return results;
+    }
+
+    public int getCountOfGeneratedFileInBetweenN_Nplus1Hours(Integer... args) {
+        int fromB4Hour = (args.length > 0 ? args[0]: 24) ;
+        int endB4Hour = fromB4Hour - 1 ;
+        List<ResultModel> results = new ArrayList<>();
+
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') and datetime(%s, 'unixepoch') <= datetime('now', '-%d Hour');", FileModel.TABLE_NAME,  FileModel.COL_FILE_GEN_TIME, fromB4Hour,  FileModel.COL_FILE_GEN_TIME, endB4Hour);
+        Log.d("create___", selectQuery);
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        int count = cursor.getCount();
+        Log.d("create___", String.valueOf(count));
+        cursor.close();
+        return count;
+    }
+
+    public List<ResultModel> getResultsInBetweenN_Nplus1Hours(int fromB4Hour, double accepted_sig_ratio_threshold) {
+        int endB4Hour = fromB4Hour - 1 ;
+        List<ResultModel> results = new ArrayList<>();
+
+        String selectQuery = String.format("SELECT * FROM %s where datetime(%s, 'unixepoch') >=datetime('now', '-%d Hour') and datetime(%s, 'unixepoch') <= datetime('now', '-%d Hour') and %s != -1 and %s >= %f;",
+                ResultModel.TABLE_NAME,
+                COL_TIMESTAMP,
+                fromB4Hour,
+                COL_TIMESTAMP,
+                endB4Hour,
+                COL_AVG_HEART_RATE,
+                ResultModel.COL_ACCEPTED_SIG_RATIO,
+                accepted_sig_ratio_threshold
+        );
+        Log.d("create___", selectQuery);
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                ResultModel result = new ResultModel();
+                result.setFileName(cursor.getString(cursor.getColumnIndex(COL_FILE_NAME)));
+                result.setResult(cursor.getString(cursor.getColumnIndex(COL_RESULT)));
+                result.setAvg_activity(cursor.getString(cursor.getColumnIndex(COL_AVG_ACTIVITY)));
+                result.setAvg_hr(cursor.getDouble(cursor.getColumnIndex(COL_AVG_HEART_RATE)));
+                result.setTimestamp(cursor.getString(cursor.getColumnIndex(ResultModel.COL_TIMESTAMP)));
+                result.setAccepted_sig_ratio(cursor.getDouble(cursor.getColumnIndex(ResultModel.COL_ACCEPTED_SIG_RATIO)));
+                result.setUncertainity_score(cursor.getString(cursor.getColumnIndex(ResultModel.COL_UNCERTAINTY_SCORE)));
 
                 results.add(result);
             } while (cursor.moveToNext());

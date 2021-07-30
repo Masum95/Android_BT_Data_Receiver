@@ -17,10 +17,13 @@ public class MedicalProfileModel {
     public static final String COL_HAS_COVID = "has_covid";
     public static final String COL_HAS_SMOKING = "has_smoking";
     public static final String COL_HAS_EATING_OUTSIDE = "has_eating_outside";
+    public static final String COL_MIN_HR = "min_hr";
+    public static final String COL_MAX_HR = "max_hr";
 
 
 
     String registration_id, height, weight, name, contact, dob ,  has_heart_disease , has_parent_heart_disease , has_hyper_tension , has_covid, has_smoking, has_eating_outside;
+    double min_hr, max_hr;
 
     // Create table SQL query
     public static final String CREATE_TABLE =
@@ -36,6 +39,8 @@ public class MedicalProfileModel {
                     COL_HAS_HYPER_TENSION + " TEXT," +
                     COL_HAS_COVID + " TEXT," +
                     COL_HAS_SMOKING + " TEXT," +
+                    COL_MIN_HR + " REAL DEFAULT 60," +
+                    COL_MAX_HR + " REAL DEFAULT 100," +
                     COL_HAS_EATING_OUTSIDE + " TEXT" +
                     ")";
 
@@ -137,5 +142,21 @@ public class MedicalProfileModel {
 
     public void setHas_eating_outside(String has_eating_outside) {
         this.has_eating_outside = has_eating_outside;
+    }
+
+    public double getMin_hr() {
+        return min_hr;
+    }
+
+    public void setMin_hr(double min_hr) {
+        this.min_hr = min_hr;
+    }
+
+    public double getMax_hr() {
+        return max_hr;
+    }
+
+    public void setMax_hr(double max_hr) {
+        this.max_hr = max_hr;
     }
 }

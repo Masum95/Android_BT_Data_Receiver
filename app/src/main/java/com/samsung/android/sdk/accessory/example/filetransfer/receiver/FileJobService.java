@@ -112,6 +112,11 @@ public class FileJobService extends JobService {
             Python.start(new AndroidPlatform(this));
         }
 
+        List<FileModel> ungeneratedFiles = myDb.getUngeneratedResultFilePaths();
+        for(FileModel file: ungeneratedFiles){
+            Log.d("tag-----", file.getFileName());
+            startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(mCtxt), file.getFileName());
+        }
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -151,7 +156,7 @@ public class FileJobService extends JobService {
                             boolean isInserted = myDb.insertFileInfo(filePath,
                                     SERVER_SRC_KEYWORD,
                                     getTimeStampFromFile(filePath),
-                                    1,
+                                    0,
                                     1);
                             Log.d("file_rcvd", fileExtension);
                             startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(context), filePath);

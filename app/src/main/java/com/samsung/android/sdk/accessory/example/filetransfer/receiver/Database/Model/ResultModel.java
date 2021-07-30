@@ -9,17 +9,20 @@ public class ResultModel {
     public static final String COL_RESULT = "result";
     public static final String COL_AVG_ACTIVITY = "avg_activity";
     public static final String COL_AVG_HEART_RATE = "avg_hr";
+    public static final String COL_ACCEPTED_SIG_RATIO = "accepted_sig_ratio";
+    public static final String COL_UNCERTAINTY_SCORE = "uncertain_score";
     public static final String COL_TIMESTAMP = "timestamp";
 
 
 
     private String fileName;
     private String result;
+    private String uncertainity_score;
     private String timestamp;
 
 
 
-    private double avg_hr;
+    private double avg_hr, accepted_sig_ratio ;
     private String avg_activity;
     // Create table SQL query
     public static final String CREATE_TABLE =
@@ -28,12 +31,28 @@ public class ResultModel {
                     COL_TIMESTAMP + " TIMESTAMP  ," +
                     COL_AVG_ACTIVITY + " TEXT ," +
                     COL_AVG_HEART_RATE + " REAL ," +
+                    COL_ACCEPTED_SIG_RATIO + " REAL ," +
+                    COL_UNCERTAINTY_SCORE + " TEXT ," +
                     COL_RESULT + " TEXT" +
                     ")";
 
     public ResultModel() {
     }
+    public double getAccepted_sig_ratio() {
+        return accepted_sig_ratio;
+    }
 
+    public void setAccepted_sig_ratio(double accepted_sig_ratio) {
+        this.accepted_sig_ratio = accepted_sig_ratio;
+    }
+
+    public String  getUncertainity_score() {
+        return uncertainity_score;
+    }
+
+    public void setUncertainity_score(String uncertainity_score) {
+        this.uncertainity_score = uncertainity_score;
+    }
     public double getAvg_hr() {
         return avg_hr;
     }

@@ -109,6 +109,7 @@ public class FileTransferReceiver extends SAAgent {
 
         Log.d("intent", String.valueOf(intent));
         if (intent == null || intent.getAction().equals(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION))) {
+            Log.d("tag---------------", intent.getAction());
 
             stopForeground(true);
             stopSelfResult(startId);

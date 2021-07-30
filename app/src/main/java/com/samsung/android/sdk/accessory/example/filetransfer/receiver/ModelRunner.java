@@ -50,14 +50,25 @@ class ModelRunner extends AsyncTask<String, Integer, String> {
             String jsonString = obj.toString();
             JSONObject jsonObject = new JSONObject(jsonString);
             String predict_ara = jsonObject.getString("predict_ara");
+            String uncertain_score = jsonObject.getString("uncertainity_score");
+            String accepted_sig_ratio = jsonObject.getString("accepted_sig_ratio");
             JSONObject hear_rate_data = jsonObject.getJSONObject("hear_rate_data");
             myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), predict_ara,
-                    hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"));
+                    hear_rate_data.getString("activity"), hear_rate_data.getDouble("hr"),
+                    Double.parseDouble(accepted_sig_ratio), uncertain_score
+            );
+            myDb.updateFileInfo(csvFileName, 1);
             return obj.toString();
 
         } catch (Exception e) {
             Log.d("tag", String.valueOf(e));
+            myDb.createResult(csvFileName, getTimeStampFromFile(csvFileName), "[-1]",
+                    "", -1,
+                    -1,
+                    "[-1]"
+            );
 
+            myDb.updateFileInfo(csvFileName, 1);
             return "";
         }
     }
@@ -66,16 +77,16 @@ class ModelRunner extends AsyncTask<String, Integer, String> {
     protected void onPostExecute(String result) {
         if (result.isEmpty()) return;
         super.onPostExecute(result);
-        String res = "";
-        String title = "Your Heart Update";
-        Notification notification = new NotificationCompat.Builder(contextRef.get(), CHANNEL_1_ID)
-                .setSmallIcon(R.drawable.ic_medicine)
-                .setContentTitle(title)
-                .setContentText("file(s) recieved")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .build();
-        notificationManager.notify(2, notification);
+//        String res = "";
+//        String title = "Your Heart Update";
+//        Notification notification = new NotificationCompat.Builder(contextRef.get(), CHANNEL_1_ID)
+//                .setSmallIcon(R.drawable.ic_medicine)
+//                .setContentTitle(title)
+//                .setContentText("file(s) recieved")
+//                .setPriority(NotificationCompat.PRIORITY_HIGH)
+//                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+//                .build();
+//        notificationManager.notify(2, notification);
 
 
     }

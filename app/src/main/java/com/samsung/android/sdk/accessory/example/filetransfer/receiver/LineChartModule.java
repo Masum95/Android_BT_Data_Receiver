@@ -30,6 +30,7 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.MedicalProfileModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getBdTimeFromUnixTimeStamp;
@@ -48,6 +49,7 @@ public class LineChartModule {
 
     XAxis xAxis;
     YAxis yAxis;
+    double minHr, maxHr;
 
     public LineChartModule(Context context, Activity activity, int lineChartId) {
         this.context = context;
@@ -66,7 +68,7 @@ public class LineChartModule {
 //            xAxis.setAxisMaximum(200f);
 //            xAxis.setAxisMinimum(-50f);
 
-            xAxis.setValueFormatter( new LineChartXAxisValueFormatter());
+            xAxis.setValueFormatter(new LineChartXAxisValueFormatter());
             xAxis.setLabelRotationAngle(-90);
 
         }
@@ -81,8 +83,18 @@ public class LineChartModule {
             yAxis.enableGridDashedLine(10f, 10f, 0f);
 
 //            // axis range
-//            yAxis.setAxisMaximum(200f);
-//            yAxis.setAxisMinimum(-50f);
+            String regi_id = myDb.get_profile().getRegi_id();
+            MedicalProfileModel medicalProfileModel = myDb.getMedicalProfile(regi_id);
+
+            minHr = medicalProfileModel.getMin_hr();
+            maxHr = medicalProfileModel.getMax_hr();
+            double lowLimit = Math.min(minHr, 50);
+            double upperLimit = Math.max(maxHr, 150);
+            yAxis.setAxisMaximum((float) upperLimit);
+            yAxis.setAxisMinimum((float) lowLimit);
+            yAxis.setLabelCount((int) ((upperLimit-lowLimit)/10));
+
+
         }
 
         Log.d("create", "hre");
@@ -90,7 +102,6 @@ public class LineChartModule {
         LineData mLineData = getLineData(24);
         showChart(lineChart, mLineData, Color.rgb(255, 255, 255));
     }
-
 
 
     // Set the display style
@@ -128,6 +139,18 @@ public class LineChartModule {
         // modify the legend ...
 //        mLegend.setPosition(LegendPosition.LEFT_OF_CHART);
 
+        LimitLine upperLimit = new LimitLine((float) maxHr); // set where the line should be drawn
+        upperLimit.setLineColor(Color.RED);
+        upperLimit.setLineWidth(4f);
+        upperLimit.enableDashedLine(10, 10f, 0f);
+
+        LimitLine lowerLimit = new LimitLine((float) minHr); // set where the line should be drawn
+        lowerLimit.setLineColor(Color.RED);
+        lowerLimit.setLineWidth(4f);
+        lowerLimit.enableDashedLine(10, 10f, 0f);
+
+        lineChart.getAxisLeft().addLimitLine(upperLimit);
+        lineChart.getAxisLeft().addLimitLine(lowerLimit);
 
         mLegend.setForm(LegendForm.CIRCLE);// style
         mLegend.setFormSize(6f);// font
@@ -157,7 +180,7 @@ public class LineChartModule {
      */
     private LineData getLineData(int hours) {
 
-        List<ResultModel> resultList = myDb.getResultsOfNHours(hours);
+        List<ResultModel> resultList = myDb.getResultsOfNHours( 24);
         ArrayList<Entry> lineEntries = new ArrayList<Entry>();
 
         lineEntries = new ArrayList<Entry>();
@@ -165,9 +188,9 @@ public class LineChartModule {
         for (ResultModel result : resultList) {
             String timestamp = result.getTimestamp(); // id is column name in db
             double hr = result.getAvg_hr();
-            lineEntries.add(new Entry(Float.parseFloat(timestamp) , (float) hr));
-            Log.d("hrs", timestamp + "  " +getBdTimeFromUnixTimeStamp(timestamp) + "  " + (hr)  );
-            i+= 1;
+            lineEntries.add(new Entry(Float.parseFloat(timestamp), (float) hr));
+            Log.d("hrs", timestamp + "  " + getBdTimeFromUnixTimeStamp(timestamp) + "  " + (hr));
+            i += 1;
         }
         Log.d("create", String.valueOf(i));
         xAxis.setLabelCount(15, true);
@@ -191,6 +214,8 @@ public class LineChartModule {
 
         // create a data object with the datasets
         LineData lineData = new LineData(lineDataSet);
+
+
         myDb.close();
 
         return lineData;

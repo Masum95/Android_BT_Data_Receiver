@@ -28,6 +28,7 @@ import androidx.fragment.app.Fragment;
 
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
+import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.Model.ResultModel;
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.R;
 
 import java.text.SimpleDateFormat;
@@ -55,12 +56,13 @@ public class FileRecvRecordFragment extends Fragment {
         thisContext = container.getContext();
         return inflater.inflate(R.layout.file_rcv_record, container, false);
     }
-    private List<String> getNHoursList(int startHourBefore){
-        List<String> titleArray = new ArrayList<>();
-        for(int i=startHourBefore;i>0;i--){
 
-            String start = new SimpleDateFormat(" HH:mm").format(new Date(System.currentTimeMillis() - i *  3600 * 1000));
-            String end = new SimpleDateFormat(" HH:mm").format(new Date(System.currentTimeMillis() - (i-1) *  3600 * 1000));
+    private List<String> getNHoursList(int startHourBefore) {
+        List<String> titleArray = new ArrayList<>();
+        for (int i = startHourBefore; i > 0; i--) {
+
+            String start = new SimpleDateFormat(" HH:mm").format(new Date(System.currentTimeMillis() - i * 3600 * 1000));
+            String end = new SimpleDateFormat(" HH:mm").format(new Date(System.currentTimeMillis() - (i - 1) * 3600 * 1000));
             titleArray.add(String.format("%s - %s", start, end));
 
         }
@@ -72,7 +74,8 @@ public class FileRecvRecordFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        DatabaseHelper myDb =  new DatabaseHelper(thisContext);;
+        DatabaseHelper myDb = new DatabaseHelper(thisContext);
+        ;
 
         listview = (ListView) getView().findViewById(R.id.file_record_list);
         listItems = new java.util.ArrayList<String>();
@@ -87,7 +90,6 @@ public class FileRecvRecordFragment extends Fragment {
         List<Map<String, String>> listArray = new ArrayList<>();
 
 
-
 //        adapter = new ArrayAdapter<String>(thisContext,
 //                android.R.layout.simple_list_item_1,
 //                listItems);
@@ -98,22 +100,35 @@ public class FileRecvRecordFragment extends Fragment {
 //                new int[] {android.R.id.text1, android.R.id.text2 });
 
 
-        ArrayList<CustomListItem> items=new ArrayList<>();
+        ArrayList<CustomListItem> items = new ArrayList<>();
         Map<String, Integer> colorMap = new HashMap<String, Integer>() {{
             put("EVEN", Color.parseColor("#ffffff"));
             put("ODD", Color.parseColor("#E8E8E8"));
             put("RED", Color.parseColor("#ff0000"));
+            put("GREEN", Color.parseColor("#00ff00"));
             //etc
         }};
+        double accepted_sig_ratio_threshold = 60;
 
-        for(int i=0; i<titleArray.size() ; i++)
-        {
+        for (int i = 0; i < titleArray.size(); i++) {
             int color = 0;
-            if(i%2==0) color = colorMap.get("EVEN");
-            if(i%2!=0) color = colorMap.get("ODD");
-            items.add(new CustomListItem(titleArray.get(i),"Files Received " + String.valueOf(myDb.getCountOfGeneratedFileInBetweenN_Nplus1Hours( 24-i)), color));
+            int record_stregnth;
+            if (i % 2 == 0) color = colorMap.get("EVEN");
+            if (i % 2 != 0) color = colorMap.get("ODD");
+            int totalFileCount = myDb.getCountOfGeneratedFileInBetweenN_Nplus1Hours(24 - i);
+            List<ResultModel> resultList = myDb.getResultsInBetweenN_Nplus1Hours(24 - i, accepted_sig_ratio_threshold);
+            int rejectCount = totalFileCount - resultList.size();
+            String rowString = String.format("Records received %d ( rejected: %d ) ", totalFileCount, rejectCount);
+
+
+            if(totalFileCount == 0) record_stregnth = 0;
+            else if (rejectCount >= totalFileCount / 2) record_stregnth =1;
+            else record_stregnth = 2;
+
+
+            items.add(new CustomListItem(titleArray.get(i), rowString, color, record_stregnth));
         }
-        CustomTwoLineListItemAdapter mla=new CustomTwoLineListItemAdapter(thisContext, items);
+        CustomTwoLineListItemAdapter mla = new CustomTwoLineListItemAdapter(thisContext, items);
         listview.setAdapter(mla);
 //        listview.setAdapter(adapter);
         myDb.close();

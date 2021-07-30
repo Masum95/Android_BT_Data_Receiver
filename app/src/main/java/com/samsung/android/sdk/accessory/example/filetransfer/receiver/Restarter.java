@@ -19,12 +19,16 @@ public class Restarter extends BroadcastReceiver {
 
         mServiceIntent = new Intent(context, FileTransferReceiver.class);
         mServiceIntent.setAction(String.valueOf(intent.getAction()));
-//        mServiceIntent.setAction(String.valueOf(Constants.ACTION.STARTFOREGROUND_ACTION));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(mServiceIntent);
+        Log.d("tag", intent.getAction());
+        if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
+            context.stopService(mServiceIntent);
         } else {
-            context.startService(mServiceIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(mServiceIntent);
+            } else {
+                context.startService(mServiceIntent);
+            }
         }
+
     }
 }

@@ -99,8 +99,7 @@ public class FileTransferReceiverFragment extends Fragment {
     DatabaseHelper myDb;
 
     private ListView listview;
-    private Button reloadBtn;
-    private Button buttonStop;
+    private Button reloadBtn, stopBtn;
 
     TextView phone_numTextView, nameTextView, upBpmTxtView, downBpmTxtView;
     ImageView downarrowView, uparrowView;
@@ -176,6 +175,7 @@ public class FileTransferReceiverFragment extends Fragment {
         uparrowView =  getView().findViewById(R.id.uparrow);
         tabLayout =  getView().findViewById(R.id.tabLayout);
         reloadBtn =  getView().findViewById(R.id.reloadBtn);
+        stopBtn =  getView().findViewById(R.id.stopBtn);
         warningLayout.setVisibility(View.VISIBLE);
 
         String mobile_num =  myDb.get_profile().getPhone_num();
@@ -205,7 +205,7 @@ public class FileTransferReceiverFragment extends Fragment {
 
         if(is_device_connected){
             tabLayout.setSelectedTabIndicatorColor(Color.parseColor("#90EE90"));
-            tabLayout.getTabAt(0).setText("Receiving File");
+            tabLayout.getTabAt(0).setText("Monitoring Active");
         }
 
         LineChartModule bar = new LineChartModule(thisContext, getActivity(), R.id.lineChart);
@@ -241,37 +241,29 @@ public class FileTransferReceiverFragment extends Fragment {
         reloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                List<ResultModel> resultList  = myDb.getResults(5);
-//                listItems.clear();
-//                listItems.add("Previous History");
-//                for(ResultModel result: resultList){
-//                    String timestamp = result.getTimestamp(); // id is column name in db
-//                    String res = result.getResult();
-//                    listItems.add(timestamp + " <--> " + res);
-//                }
-//
-//                adapter.notifyDataSetChanged();
-//                getActivity().finish();
-//                startActivity(getActivity().getIntent());
                 getActivity().finish();
                 getActivity().overridePendingTransition(0, 0);
                 startActivity(getActivity().getIntent());
                 getActivity().overridePendingTransition(0, 0);
             }
         });
-//
-//
-//        buttonStop.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
+
+
+        stopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("tag", "clicked here");
 //                if (isMyServiceRunning(mReceiverService.getClass())) {
-//
+                mServiceIntent = new Intent();
+                mServiceIntent.setAction(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION));
+
+                mServiceIntent.setClass(thisContext, Restarter.class);
+                thisContext.sendBroadcast(mServiceIntent);
 //                    getActivity().startService(mServiceIntent);
-//
+
 //                }
-//            }
-//        });
+            }
+        });
 
         mServiceIntent = new Intent();
         mServiceIntent.setAction("restartservice");
@@ -559,7 +551,7 @@ public class FileTransferReceiverFragment extends Fragment {
                 mFilePath = path;
                 mTransId = id;
                 tabLayout.setBackgroundColor(Color.parseColor("#90EE90"));
-                tabLayout.getTabAt(0).setText("Connected To Watch");
+                tabLayout.getTabAt(0).setText("Monitoring Active");
 
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

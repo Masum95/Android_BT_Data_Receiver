@@ -7,6 +7,8 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -21,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -51,6 +54,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -81,7 +85,7 @@ public class ExportPdfFragment extends Fragment {
 
 
     private TextView fromDateInput, toDateInput;
-    private DatePickerDialog.OnDateSetListener mDateSetListener;
+    private DatePickerDialog.OnDateSetListener fromDateListener, toDateListener;
 
     Button submitBtn;
 
@@ -129,6 +133,65 @@ public class ExportPdfFragment extends Fragment {
         setRadioTextToButtonMapping();
 
 
+
+        fromDateInput.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Calendar cal = Calendar.getInstance();
+                int year = cal.get(Calendar.YEAR);
+                int month = cal.get(Calendar.MONTH);
+                int day = cal.get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog dialog = new DatePickerDialog(
+                        thisContext,
+                        android.R.style.Theme_Holo_Light_Dialog_MinWidth,
+                        fromDateListener,
+                        year, month, day);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.show();
+            }
+        });
+        toDateInput.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Calendar cal = Calendar.getInstance();
+                int year = cal.get(Calendar.YEAR);
+                int month = cal.get(Calendar.MONTH);
+                int day = cal.get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog dialog = new DatePickerDialog(
+                        thisContext,
+                        android.R.style.Theme_Holo_Light_Dialog_MinWidth,
+                        toDateListener,
+                        year, month, day);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.show();
+            }
+        });
+
+        fromDateListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                month = month + 1;
+                Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
+
+                String date = year + "-" + month + "-" + day;
+                fromDateInput.setText(date);
+            }
+        };
+        toDateListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                month = month + 1;
+                Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
+
+                String date = year + "-" + month + "-" + day;
+                fromDateInput.setText(date);
+            }
+        };
+
+
+
         submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -167,7 +230,9 @@ public class ExportPdfFragment extends Fragment {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
             List<ResultModel> resList = new ArrayList<>();
-            resList = myDb.getResults();
+            double accepted_sig_ratio_threshold = 40;
+
+            resList = myDb.getResults(-1, accepted_sig_ratio_threshold);
 
             String recordType = getRadioValue(R.id.recordsTypeRadioGroup);
 
@@ -177,11 +242,13 @@ public class ExportPdfFragment extends Fragment {
             // python block
             List<String> filesList = new ArrayList<>();
             List<String> predList = new ArrayList<>();
+            List<String> uncertainList = new ArrayList<>();
             List<String> timestampList = new ArrayList<>();
             for(ResultModel res: resList){
                 filesList.add(res.getFileName());
                 predList.add(res.getResult());
                 timestampList.add(res.getTimestamp());
+                uncertainList.add(res.getUncertainity_score());
             }
             myDb.close();
 
@@ -194,7 +261,7 @@ public class ExportPdfFragment extends Fragment {
             Log.d("tag", String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)));
             String output_file = String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)) + "/record.pdf";
             try {
-                PyObject obj = pyObject.callAttr("pdf_preprocessing", output_file, filesList.toString(), predList.toString(), timestampList.toString());
+                PyObject obj = pyObject.callAttr("pdf_preprocessing", output_file, filesList.toString(), predList.toString(), uncertainList.toString(), timestampList.toString());
                 String jsonString = obj.toString();
                 Log.d("tag", "Result from python "+ jsonString );
 

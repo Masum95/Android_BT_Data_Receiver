@@ -21,30 +21,17 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.samsung.android.sdk.accessory.example.filetransfer.receiver.Database.DatabaseHelper;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
 
 
@@ -59,7 +46,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
     Button submitBtn;
     Spinner spinner;
 
-    EditText heightText, weightText;
+    EditText minHrInputText, maxHrInputText;
     String dob;
     Context thisContext;
 
@@ -92,8 +79,8 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
 
         submitBtn = (Button) getView().findViewById(R.id.buttonSubmit);
 
-        heightText = (EditText) getView().findViewById(R.id.height);
-        weightText = (EditText) getView().findViewById(R.id.weight);
+        minHrInputText = (EditText) getView().findViewById(R.id.min_hr_text);
+        maxHrInputText = (EditText) getView().findViewById(R.id.max_hr_text);
 
         Log.d("register", "here");
 
@@ -169,6 +156,12 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         return -1;
     }
 
+    private String getValidValue(String value) {
+        if (value != "null") {
+            return value;
+        }
+        return "";
+    }
 
     void UpdateOnUi(JSONObject obj) {
         class OneShotTask implements Runnable {
@@ -176,6 +169,9 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             OneShotTask(JSONObject s) { Jobject = s; }
             public void run() {
                 try {
+                    minHrInputText.setText(getValidValue(Jobject.getString("min_hr")));
+                    maxHrInputText.setText(getValidValue(Jobject.getString("max_hr")));
+
                     setRadioValue("has_heart_disease", Jobject.getString("has_heart_disease"));
                     setRadioValue("has_parent_heart_disease", Jobject.getString("has_parent_heart_disease"));
                     setRadioValue("has_hyper_tension", Jobject.getString("has_hyper_tension"));
@@ -226,6 +222,8 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             String covid = getRadioValue(R.id.radioGroupCovid);
             String smoking = getRadioValue(R.id.radioGroupSmoking);
             String eatingOutside = getRadioValue(R.id.radioGroupEatOutside);
+            String min_hr = minHrInputText.getText().toString();
+            String max_hr = maxHrInputText.getText().toString();
 
             HashMap<String, String> map = new HashMap<>();
             map.put("has_heart_disease", HD);
@@ -234,6 +232,8 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
             map.put("has_covid", covid);
             map.put("has_smoking", smoking);
             map.put("has_eating_outside", eatingOutside);
+            map.put("min_hr", min_hr);
+            map.put("max_hr", max_hr);
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
             myDb.close();
