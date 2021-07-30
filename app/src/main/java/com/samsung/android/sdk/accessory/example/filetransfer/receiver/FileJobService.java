@@ -161,6 +161,10 @@ public class FileJobService extends JobService {
                             Log.d("file_rcvd", fileExtension);
                             startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(context), filePath);
 //                            new ModelRunner(context).execute(filePath);
+                            String[] tmpSplit = filePath.split("/");
+                            String fileName = tmpSplit[tmpSplit.length - 1];
+                            new SendFileRecvAck(fileName).execute();
+
 
                         }
                         Log.d("file_rcvd_here", String.valueOf(status) + " " + String.valueOf(reason));
@@ -283,7 +287,6 @@ public class FileJobService extends JobService {
                                     long downloadID = downloadmanager.enqueue(request);
                                 }
                                 Log.d("download", recvFileList);
-                                new SendFileRecvAck(recvFileList).execute();
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
