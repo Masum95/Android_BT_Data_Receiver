@@ -113,7 +113,8 @@ public class FileJobService extends JobService {
         }
 
         List<FileModel> ungeneratedFiles = myDb.getUngeneratedResultFilePaths();
-        for(FileModel file: ungeneratedFiles){
+        int NUM_OF_FILES_TO_BE_RUN = 2;
+        for(FileModel file : ungeneratedFiles){
             Log.d("tag-----", file.getFileName());
             startMultpleModelRunnerAsyncTaskInParallel(new ModelRunner(mCtxt), file.getFileName());
         }

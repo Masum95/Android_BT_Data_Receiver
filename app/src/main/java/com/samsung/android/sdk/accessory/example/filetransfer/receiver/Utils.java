@@ -2,6 +2,7 @@ package com.samsung.android.sdk.accessory.example.filetransfer.receiver;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -21,6 +22,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Utils {
 
@@ -121,6 +124,10 @@ public class Utils {
             asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
         else
             asyncTask.execute(params);
+    }
+    public static String formateDateTime(final int date, final int mon, final int year){
+        String format = "%d/%m/%Y";
+        return String.format("%d/%d/%d", date, mon, year);
     }
 
 }

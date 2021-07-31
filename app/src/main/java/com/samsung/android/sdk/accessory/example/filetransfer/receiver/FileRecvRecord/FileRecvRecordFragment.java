@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.ACCEPTED_SIG_RATIO_FOR_RECORD_LIST;
+
 
 public class FileRecvRecordFragment extends Fragment {
 
@@ -116,7 +118,7 @@ public class FileRecvRecordFragment extends Fragment {
             if (i % 2 == 0) color = colorMap.get("EVEN");
             if (i % 2 != 0) color = colorMap.get("ODD");
             int totalFileCount = myDb.getCountOfGeneratedFileInBetweenN_Nplus1Hours(24 - i);
-            List<ResultModel> resultList = myDb.getResultsInBetweenN_Nplus1Hours(24 - i, accepted_sig_ratio_threshold);
+            List<ResultModel> resultList = myDb.getResultsInBetweenN_Nplus1Hours(24 - i, ACCEPTED_SIG_RATIO_FOR_RECORD_LIST);
             int rejectCount = totalFileCount - resultList.size();
             String rowString = String.format("Records received %d ( rejected: %d ) ", totalFileCount, rejectCount);
 

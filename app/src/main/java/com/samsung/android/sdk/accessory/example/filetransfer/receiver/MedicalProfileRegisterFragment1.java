@@ -48,6 +48,7 @@ import okhttp3.Response;
 
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.formateDateTime;
 
 
 public class MedicalProfileRegisterFragment1 extends Fragment {
@@ -110,8 +111,8 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
                 month = month + 1;
                 Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
 
-                String date = year + "-" + month + "-" + day;
-                mDisplayDate.setText(date);
+//                String date = String  year + "-" + month + "-" + day;
+                mDisplayDate.setText(formateDateTime( day, month, year) );
             }
         };
 

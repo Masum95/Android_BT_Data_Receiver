@@ -69,6 +69,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.ACCEPTED_SIG_RATIO_FOR_PDF_PRINT;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.ACCEPTED_SIG_RATIO_FOR_RECORD_LIST;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.CSV_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.FILE_UPLOAD_GET_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.MEDICAL_PROFILE_URL;
@@ -77,6 +79,7 @@ import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Co
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.PDF_GENERATE_URL;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.RECORD_FILE_DIR;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Constants.SHARED_PREF_ID;
+import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.formateDateTime;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.getTimeStampFromFile;
 import static com.samsung.android.sdk.accessory.example.filetransfer.receiver.Utils.haveNetworkConnection;
 
@@ -176,7 +179,7 @@ public class ExportPdfFragment extends Fragment {
                 Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
 
                 String date = year + "-" + month + "-" + day;
-                fromDateInput.setText(date);
+                fromDateInput.setText(formateDateTime( day, month, year));
             }
         };
         toDateListener = new DatePickerDialog.OnDateSetListener() {
@@ -186,7 +189,7 @@ public class ExportPdfFragment extends Fragment {
                 Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
 
                 String date = year + "-" + month + "-" + day;
-                fromDateInput.setText(date);
+                fromDateInput.setText(formateDateTime( day, month, year));
             }
         };
 
@@ -230,14 +233,13 @@ public class ExportPdfFragment extends Fragment {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
             List<ResultModel> resList = new ArrayList<>();
-            double accepted_sig_ratio_threshold = 0.4;
 
-            resList = myDb.getResults(-1, accepted_sig_ratio_threshold);
 
             String recordType = getRadioValue(R.id.recordsTypeRadioGroup);
 
             String fromDate = fromDateInput.getText().toString();
             String toDate = toDateInput.getText().toString();
+            resList = myDb.getResults(-1, ACCEPTED_SIG_RATIO_FOR_PDF_PRINT, fromDate, toDate);
 
             // python block
             List<String> filesList = new ArrayList<>();

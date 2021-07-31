@@ -357,19 +357,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public List<ResultModel> getResults(int limit, double accepted_sig_ratio_threshold) {
+    public List<ResultModel> getResults(int limit, double accepted_sig_ratio_threshold, String fromDate, String toDate) {
         List<ResultModel> results = new ArrayList<>();
+        String conditionString =  String.format("%s != -1 and %s >= %f ", COL_AVG_HEART_RATE, ResultModel.COL_ACCEPTED_SIG_RATIO, accepted_sig_ratio_threshold);
+        if(!fromDate.equals("")) {
+            conditionString+=  String.format(" and strftime('%d/%m/%Y', datetime(%s, 'unixepoch'))  > %s ", COL_TIMESTAMP, fromDate);
+        }
+        if(!toDate.equals("")) {
+            conditionString+=  String.format(" and strftime('%d/%m/%Y', datetime(%s, 'unixepoch'))  < %s ", COL_TIMESTAMP, toDate);
+        }
 
         // Select All Query
         String selectQuery = null;
         if (limit == -1) {
-            selectQuery = String.format("SELECT * FROM %s where %s != -1 and %s >= %f ORDER BY %s;", ResultModel.TABLE_NAME, COL_AVG_HEART_RATE, ResultModel.COL_ACCEPTED_SIG_RATIO, accepted_sig_ratio_threshold, COL_TIMESTAMP);
+            selectQuery = String.format("SELECT * FROM %s where %s ORDER BY %s;", ResultModel.TABLE_NAME, conditionString,   COL_TIMESTAMP);
         } else {
-            selectQuery = String.format("SELECT * FROM %s where %s != -1 and %s >= %f  ORDER BY %s DESC LIMIT %d;", ResultModel.TABLE_NAME, COL_AVG_HEART_RATE, ResultModel.COL_ACCEPTED_SIG_RATIO, accepted_sig_ratio_threshold, COL_TIMESTAMP, limit);
+            selectQuery = String.format("SELECT * FROM %s where %s ORDER BY %s DESC LIMIT %d;", ResultModel.TABLE_NAME, conditionString,  COL_TIMESTAMP, limit);
 
         }
 
-
+        Log.d("Tag----", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
