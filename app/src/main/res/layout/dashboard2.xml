@@ -190,8 +190,8 @@
                 <TextView
                     android:id="@+id/warningLine2"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="25dp"
                     android:text="Consult With a Doctor"
                     android:textAlignment="center"
                     android:textColor="#F44336"
