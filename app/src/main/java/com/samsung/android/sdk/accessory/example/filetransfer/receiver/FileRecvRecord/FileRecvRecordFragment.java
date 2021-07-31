@@ -108,7 +108,7 @@ public class FileRecvRecordFragment extends Fragment {
             put("GREEN", Color.parseColor("#00ff00"));
             //etc
         }};
-        double accepted_sig_ratio_threshold = 60;
+        double accepted_sig_ratio_threshold = 0.6;
 
         for (int i = 0; i < titleArray.size(); i++) {
             int color = 0;

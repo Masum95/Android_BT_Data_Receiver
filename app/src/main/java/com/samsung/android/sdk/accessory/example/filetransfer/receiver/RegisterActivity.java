@@ -69,18 +69,16 @@ public class RegisterActivity extends AppCompatActivity {
             register.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-//                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//                    startActivity(intent);
-//                    finish();
-                    if(!haveNetworkConnection(getApplicationContext())){
-                        Toast.makeText(getApplicationContext(),"Something Went Wrong.\nPlease Check Your Internet Connection",Toast.LENGTH_LONG).show();
-                    }
-                    if (is_client_side_valid()) {
-                        // redirect to LoginActivity
-
-                        new serverValidation().execute();
-
-                    }
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent);
+                    finish();
+//                    if(!haveNetworkConnection(getApplicationContext())){
+//                        Toast.makeText(getApplicationContext(),"Something Went Wrong.\nPlease Check Your Internet Connection",Toast.LENGTH_LONG).show();
+//                    }
+//                    if (is_client_side_valid()) {
+//                        // redirect to LoginActivity
+//                        new serverValidation().execute();
+//                    }
 
                 }
             });

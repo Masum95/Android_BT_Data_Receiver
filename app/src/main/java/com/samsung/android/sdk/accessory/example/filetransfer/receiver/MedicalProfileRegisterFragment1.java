@@ -120,9 +120,14 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try{
+                    Log.d("tag----=====", "here in submit values 1  ");
 
+                    new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
 
-                new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
+                }catch(Exception e){
+                    Log.d("tag=====", String.valueOf(e));
+                }
 
 //                Toast.makeText(getApplicationContext(), selectedRadio, Toast.LENGTH_SHORT).show();
             }
@@ -221,8 +226,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
-            myDb.close();
-
+            Log.d("tag----=====", "here in submit values ");
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
 
             String dob = mDisplayDate.getText().toString();
@@ -237,6 +241,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
             map.put("weight", weight);
             map.put("name", name);
             map.put("contact", contact);
+            Log.d("tag----=====", "here in submit values ");
 
             myDb.createOrUpdateMedicalProfile(regi_id, map);
             myDb.close();

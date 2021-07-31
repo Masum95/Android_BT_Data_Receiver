@@ -230,7 +230,7 @@ public class ExportPdfFragment extends Fragment {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
             String regi_id = myDb.get_profile().getRegi_id();
             List<ResultModel> resList = new ArrayList<>();
-            double accepted_sig_ratio_threshold = 40;
+            double accepted_sig_ratio_threshold = 0.4;
 
             resList = myDb.getResults(-1, accepted_sig_ratio_threshold);
 

@@ -70,6 +70,8 @@ public class Utils {
             jsonObject.put("has_covid", profile != null ?  profile.getHas_covid(): "");
             jsonObject.put("has_smoking",  profile != null ?  profile.getHas_smoking(): "");
             jsonObject.put("has_eating_outside", profile != null ?  profile.getHas_eating_outside(): "");
+            jsonObject.put("min_hr", profile != null ?  profile.getMin_hr(): 65);
+            jsonObject.put("max_hr", profile != null ?  profile.getMax_hr(): 100);
         } catch (JSONException e) {
             e.printStackTrace();
         }
