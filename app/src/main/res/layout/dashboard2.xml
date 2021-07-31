@@ -19,7 +19,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
-
     <Button
         android:id="@+id/reloadBtn"
         android:layout_width="45dp"
@@ -42,11 +41,11 @@
         android:paddingStart="1dp"
         android:paddingEnd="20dp"
         android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@+id/phoneNum"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.065"
         app:layout_constraintLeft_toLeftOf="@+id/reloadBtn"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/phoneNum"
         tools:layout_editor_absoluteY="267dp" />
 
     <com.google.android.material.tabs.TabLayout
@@ -79,10 +78,10 @@
         android:layout_height="104dp"
         android:layout_marginEnd="128dp"
         android:rotation="90"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tabLayout"
-        app:srcCompat="?attr/homeAsUpIndicator"
-        android:visibility="invisible"/>
+        app:srcCompat="?attr/homeAsUpIndicator" />
 
     <ImageView
         android:id="@+id/downarrow"
@@ -91,10 +90,10 @@
         android:layout_marginTop="80dp"
         android:layout_marginEnd="128dp"
         android:rotation="-90"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tabLayout"
-        app:srcCompat="?attr/homeAsUpIndicator"
-        android:visibility="invisible"/>
+        app:srcCompat="?attr/homeAsUpIndicator" />
 
     <TextView
         android:id="@+id/upBpm"
@@ -143,11 +142,11 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="397dp"
+        android:layout_width="0dp"
         android:layout_height="89dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="32dp"
         android:layout_marginTop="324dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="32dp"
         android:layout_marginBottom="300dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -165,9 +164,11 @@
             <ImageView
                 android:id="@+id/warningImage"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="0.8"
-                app:srcCompat="@mipmap/red_alert_foreground" />
+                android:backgroundTint="#131313"
+                android:backgroundTintMode="src_over"
+                app:srcCompat="@drawable/baseline_report_problem_24" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -175,21 +176,22 @@
                 android:layout_weight="0.2"
                 android:orientation="vertical">
 
-<!--                <TextView-->
-<!--                    android:id="@+id/warningLine1"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginTop="10dp"-->
-<!--                    android:text="Frequent Suspicious Rhythm"-->
-<!--                    android:textAlignment="center"-->
-<!--                    android:textColor="#F44336"-->
-<!--                    android:textSize="20sp"-->
-<!--                    android:textStyle="bold" />-->
+                <!--                <TextView-->
+                <!--                    android:id="@+id/warningLine1"-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:layout_marginTop="10dp"-->
+                <!--                    android:text="Frequent Suspicious Rhythm"-->
+                <!--                    android:textAlignment="center"-->
+                <!--                    android:textColor="#F44336"-->
+                <!--                    android:textSize="20sp"-->
+                <!--                    android:textStyle="bold" />-->
 
                 <TextView
                     android:id="@+id/warningLine2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
                     android:text="Consult With a Doctor"
                     android:textAlignment="center"
                     android:textColor="#F44336"
