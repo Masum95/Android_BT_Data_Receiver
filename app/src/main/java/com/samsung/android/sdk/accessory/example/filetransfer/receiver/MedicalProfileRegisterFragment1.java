@@ -171,7 +171,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
             myDb.close();
             JSONObject jsonObject = Utils.getMedicalProfileJson(getContext());
             UpdateOnUi(jsonObject);
@@ -226,7 +226,7 @@ public class MedicalProfileRegisterFragment1 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
             Log.d("tag----=====", "here in submit values ");
 //                jsonObject.put("registration_id", "3d2594ec-7c88-4f9c-9c2c-3e4ddf9891be");
 

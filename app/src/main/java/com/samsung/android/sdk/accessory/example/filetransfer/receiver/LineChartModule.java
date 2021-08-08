@@ -83,7 +83,7 @@ public class LineChartModule {
             yAxis.enableGridDashedLine(10f, 10f, 0f);
 
 //            // axis range
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
             MedicalProfileModel medicalProfileModel = myDb.getMedicalProfile(regi_id);
 
             minHr = medicalProfileModel.getMin_hr();

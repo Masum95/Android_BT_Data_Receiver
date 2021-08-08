@@ -57,7 +57,7 @@ public class Utils {
     public static JSONObject getMedicalProfileJson(Context context){
         final DatabaseHelper myDb = new DatabaseHelper(context);
 
-        String regi_id = myDb.get_profile().getRegi_id();
+        String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
         MedicalProfileModel profile = myDb.getMedicalProfile(regi_id);
         JSONObject jsonObject = new JSONObject();
         try {
@@ -125,9 +125,11 @@ public class Utils {
         else
             asyncTask.execute(params);
     }
-    public static String formateDateTime(final int date, final int mon, final int year){
+    public static String formateDateTime(final int day, final int mon, final int year){
         String format = "%d/%m/%Y";
-        return String.format("%d/%d/%d", date, mon, year);
+        String date = year + "/" + String.format("%02d",mon) + "/"+ String.format("%02d", day);
+
+        return date;
     }
 
 }

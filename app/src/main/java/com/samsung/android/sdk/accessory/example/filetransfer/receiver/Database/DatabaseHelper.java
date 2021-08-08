@@ -361,12 +361,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<ResultModel> results = new ArrayList<>();
         String conditionString =  String.format("%s != -1 and %s >= %f ", COL_AVG_HEART_RATE, ResultModel.COL_ACCEPTED_SIG_RATIO, accepted_sig_ratio_threshold);
         if(!fromDate.equals("")) {
-            conditionString+=  String.format(" and strftime('%d/%m/%Y', datetime(%s, 'unixepoch'))  > %s ", COL_TIMESTAMP, fromDate);
-        }
-        if(!toDate.equals("")) {
-            conditionString+=  String.format(" and strftime('%d/%m/%Y', datetime(%s, 'unixepoch'))  < %s ", COL_TIMESTAMP, toDate);
+            conditionString+=  String.format(" and strftime('%%Y/%%m/%%d', datetime(%s, 'unixepoch'))  > '%s' ", COL_TIMESTAMP, fromDate);
         }
 
+        if(!toDate.equals("")) {
+            conditionString+=  String.format(" and strftime('%%Y/%%m/%%d', datetime(%s, 'unixepoch'))  < '%s' ", COL_TIMESTAMP, toDate);
+        }
         // Select All Query
         String selectQuery = null;
         if (limit == -1) {
@@ -376,7 +376,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         }
 
-        Log.d("Tag----", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 

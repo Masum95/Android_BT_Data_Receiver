@@ -116,7 +116,7 @@ public class ExportPdfFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDb = new DatabaseHelper(thisContext);
-        String regi_id = myDb.get_profile().getRegi_id();
+        String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
 
         downloadmanager = (DownloadManager)  thisContext.getSystemService(Context.DOWNLOAD_SERVICE);
 
@@ -178,7 +178,7 @@ public class ExportPdfFragment extends Fragment {
                 month = month + 1;
                 Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
 
-                String date = year + "-" + month + "-" + day;
+                String date = year + "-" + String.format("%02d",month) + "-" + String.format("%02d", day) ;
                 fromDateInput.setText(formateDateTime( day, month, year));
             }
         };
@@ -187,9 +187,8 @@ public class ExportPdfFragment extends Fragment {
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 month = month + 1;
                 Log.d("tag", "onDateSet: mm/dd/yyy: " + year + "-" + month + "-" + day);
-
-                String date = year + "-" + month + "-" + day;
-                fromDateInput.setText(formateDateTime( day, month, year));
+                String date = year + "-" + String.format("%02d",month) + "-" + String.format("%02d", day) ;
+                toDateInput.setText(formateDateTime( day, month, year));
             }
         };
 
@@ -204,7 +203,7 @@ public class ExportPdfFragment extends Fragment {
 //                }
                 new submitValues().execute();//                Toast.makeText(getApplicationContext(), selectedDropDown, Toast.LENGTH_SHORT).show();
 
-                Toast.makeText(thisContext, "Record is being Prepared.\n You Will be Notified once file is ready", Toast.LENGTH_LONG).show();
+                Toast.makeText(thisContext, "Records are being processed.\n You Will be Notified once file is ready", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -231,7 +230,7 @@ public class ExportPdfFragment extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
             List<ResultModel> resList = new ArrayList<>();
 
 
@@ -240,7 +239,14 @@ public class ExportPdfFragment extends Fragment {
             String fromDate = fromDateInput.getText().toString();
             String toDate = toDateInput.getText().toString();
             resList = myDb.getResults(-1, ACCEPTED_SIG_RATIO_FOR_PDF_PRINT, fromDate, toDate);
-
+            if(resList.size() == 0 ){
+                getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(thisContext, "No Record", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return "";
+            }
             // python block
             List<String> filesList = new ArrayList<>();
             List<String> predList = new ArrayList<>();

@@ -104,7 +104,7 @@ public class FileJobService extends JobService {
         notificationManager = NotificationManagerCompat.from(this);  // for pushing notification
         myDb = new DatabaseHelper(this);
         phone_num = myDb.get_profile().getPhone_num();
-        regi_id = myDb.get_profile().getRegi_id();
+        regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
         mCtxt = getApplicationContext();
         downloadmanager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 

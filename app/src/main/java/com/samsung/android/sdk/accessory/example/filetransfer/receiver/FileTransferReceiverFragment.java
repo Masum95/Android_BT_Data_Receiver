@@ -162,7 +162,7 @@ public class FileTransferReceiverFragment extends Fragment {
 
 
 
-        String regi_id = myDb.get_profile().getRegi_id();
+        String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
 
         PACKAGE_NAME = thisContext.getPackageName();
 

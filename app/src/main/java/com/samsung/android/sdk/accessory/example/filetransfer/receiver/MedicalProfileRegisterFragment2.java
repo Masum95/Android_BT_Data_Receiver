@@ -190,7 +190,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
             myDb.close();
             JSONObject Jobject = Utils.getMedicalProfileJson(getContext());
             UpdateOnUi(Jobject);
@@ -215,7 +215,7 @@ public class MedicalProfileRegisterFragment2 extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             final DatabaseHelper myDb = new DatabaseHelper(thisContext);
-            String regi_id = myDb.get_profile().getRegi_id();
+            String regi_id = "xyz"; //regi_id = myDb.get_profile().getRegi_id();
             String HD = getRadioValue(R.id.radioGroupHD);
             String parent_HD = getRadioValue(R.id.radioGroupPHD);
             String hyperTension = getRadioValue(R.id.radioGroupHT);
