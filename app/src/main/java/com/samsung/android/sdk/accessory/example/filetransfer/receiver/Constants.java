@@ -23,8 +23,8 @@ public interface  Constants {
     String SERVER_SRC_KEYWORD = "SERVER";
     String WATCH_SRC_KEYWORD = "WATCH";
     String DATE_FORMAT = "WATCH";
-    double ACCEPTED_SIG_RATIO_FOR_RECORD_LIST = 0.4;
-    double ACCEPTED_SIG_RATIO_FOR_PDF_PRINT = 0.4;
+    double ACCEPTED_SIG_RATIO_FOR_RECORD_LIST = 0.1;
+    double ACCEPTED_SIG_RATIO_FOR_PDF_PRINT = 0.2;
 
 
     String SHARED_PREF_ID = "FileXferAppPreference";
