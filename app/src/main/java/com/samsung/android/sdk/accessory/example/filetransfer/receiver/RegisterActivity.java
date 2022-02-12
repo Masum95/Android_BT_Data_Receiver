@@ -69,6 +69,8 @@ public class RegisterActivity extends AppCompatActivity {
             register.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    prefs.edit().putBoolean("isLoggedIn", true).apply();
+
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(intent);
                     finish();
