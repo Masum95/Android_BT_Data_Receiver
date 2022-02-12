@@ -109,7 +109,8 @@ public class FileTransferReceiver extends SAAgent {
 
         Log.d("intent", String.valueOf(intent));
         if (intent == null || intent.getAction().equals(String.valueOf(Constants.ACTION.STOPFOREGROUND_ACTION))) {
-            Log.d("tag---------------", intent.getAction());
+            // Log.d("tag---------------", intent.getAction());
+            // why are we checking if intent is null and them attempting to call null.getAction()?
 
             stopForeground(true);
             stopSelfResult(startId);

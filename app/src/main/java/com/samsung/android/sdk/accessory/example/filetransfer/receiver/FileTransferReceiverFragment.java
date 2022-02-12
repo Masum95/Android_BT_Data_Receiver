@@ -181,7 +181,7 @@ public class FileTransferReceiverFragment extends Fragment {
         //String mobile_num =  myDb.get_profile().getPhone_num();
         String mobile_num =  "01946894470";
         String name = myDb.getMedicalProfile(regi_id).getName();
-        phone_numTextView.setText(mobile_num);
+//        phone_numTextView.setText(mobile_num);
         nameTextView.setText(name);
 
         List<ResultModel> resultList = myDb.getResultsOfNHours(24);
